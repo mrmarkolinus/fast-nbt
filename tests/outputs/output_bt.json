@@ -1,6 +1,24 @@
 {
   "name": "Level",
   "values": {
+    "intTest": {
+      "Int": {
+        "name": "intTest",
+        "value": 2147483647
+      }
+    },
+    "longTest": {
+      "Long": {
+        "name": "longTest",
+        "value": 9223372036854775807
+      }
+    },
+    "floatTest": {
+      "Float": {
+        "name": "floatTest",
+        "value": 0.49823147
+      }
+    },
     "listTest (long)": {
       "List": {
         "name": "listTest (long)",
@@ -39,51 +57,6 @@
         ]
       }
     },
-    "nested compound test": {
-      "Compound": {
-        "name": "nested compound test",
-        "values": {
-          "ham": {
-            "Compound": {
-              "name": "ham",
-              "values": {
-                "value": {
-                  "Float": {
-                    "name": "value",
-                    "value": 0.75
-                  }
-                },
-                "name": {
-                  "String": {
-                    "name": "name",
-                    "value": "Hampus"
-                  }
-                }
-              }
-            }
-          },
-          "egg": {
-            "Compound": {
-              "name": "egg",
-              "values": {
-                "value": {
-                  "Float": {
-                    "name": "value",
-                    "value": 0.5
-                  }
-                },
-                "name": {
-                  "String": {
-                    "name": "name",
-                    "value": "Eggbert"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "listTest (compound)": {
       "List": {
         "name": "listTest (compound)",
@@ -93,16 +66,16 @@
             "Compound": {
               "name": "",
               "values": {
-                "name": {
-                  "String": {
-                    "name": "name",
-                    "value": "Compound tag #0"
-                  }
-                },
                 "created-on": {
                   "Long": {
                     "name": "created-on",
                     "value": 1264099775885
+                  }
+                },
+                "name": {
+                  "String": {
+                    "name": "name",
+                    "value": "Compound tag #0"
                   }
                 }
               }
@@ -136,34 +109,10 @@
         "value": 32767
       }
     },
-    "floatTest": {
-      "Float": {
-        "name": "floatTest",
-        "value": 0.49823147
-      }
-    },
-    "intTest": {
-      "Int": {
-        "name": "intTest",
-        "value": 2147483647
-      }
-    },
     "byteTest": {
       "Byte": {
         "name": "byteTest",
         "value": 127
-      }
-    },
-    "doubleTest": {
-      "Double": {
-        "name": "doubleTest",
-        "value": 0.4931287132182315
-      }
-    },
-    "longTest": {
-      "Long": {
-        "name": "longTest",
-        "value": 9223372036854775807
       }
     },
     "byteArrayTest (the first 1000 values of (n*n*255+n*7)%100, starting with n=0 (0, 62, 34, 16, 8, ...))": {
@@ -1171,6 +1120,57 @@
           6,
           48
         ]
+      }
+    },
+    "doubleTest": {
+      "Double": {
+        "name": "doubleTest",
+        "value": 0.4931287132182315
+      }
+    },
+    "nested compound test": {
+      "Compound": {
+        "name": "nested compound test",
+        "values": {
+          "egg": {
+            "Compound": {
+              "name": "egg",
+              "values": {
+                "name": {
+                  "String": {
+                    "name": "name",
+                    "value": "Eggbert"
+                  }
+                },
+                "value": {
+                  "Float": {
+                    "name": "value",
+                    "value": 0.5
+                  }
+                }
+              }
+            }
+          },
+          "ham": {
+            "Compound": {
+              "name": "ham",
+              "values": {
+                "value": {
+                  "Float": {
+                    "name": "value",
+                    "value": 0.75
+                  }
+                },
+                "name": {
+                  "String": {
+                    "name": "name",
+                    "value": "Hampus"
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "stringTest": {

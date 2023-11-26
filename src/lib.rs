@@ -3,6 +3,8 @@ pub mod file_parser;
 pub mod region;
 pub mod generic_bin;
 
+use nbt_tag::NbtTag;
+use nbt_tag::NbtTagCompound;
 use serde::{ser::SerializeMap, Serialize, Deserialize};
 use std::collections::HashMap;
 use std::io;
@@ -148,6 +150,31 @@ impl McWorldDescriptor {
         
         Ok(self.tag_compounds_list.get(0).unwrap().to_json(path)?)
 
+    }
+
+    pub fn search(&self, key: &str) -> bool {
+        for map in self.tag_compounds_list.iter() {
+            if self.recursive_compound_search(&map, key) {
+                return true;
+            }
+        }
+        false
+    }
+
+    fn recursive_compound_search(&self, tag_compound: &nbt_tag::NbtTagCompound, key: &str) -> bool {
+        
+        if tag_compound.name == key {
+            return true;
+        }
+        else {
+            for (k, v) in tag_compound.values.iter() {
+                if k == key {
+                    return true;
+                }
+            }
+        }
+    
+        false
     }
 
     /* fn read_from_binary_file(input_path: PathBuf) -> std::io::Result<Vec<nbt_tag::NbtTagCompound>> {
