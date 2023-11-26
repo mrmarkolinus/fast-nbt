@@ -162,9 +162,42 @@ impl McWorldDescriptor {
         false
     }
 
-    fn recursive_compound_search(&self, tag_compound: &nbt_tag::NbtTagCompound, key: &str) -> (bool, nbt_tag::NbtTag) {
+    pub fn search_compound(&self, key: &str) ->  (bool, Option<&nbt_tag::NbtTagCompound>) {
+        for tag_compound in self.tag_compounds_list.iter() {
+            let (compound_found, tag_compound_option) = self.recursive_compound_search(tag_compound, key);
+
+            if compound_found {
+                return (true, tag_compound_option);
+            }
+        }
         
-        /* if tag_compound.name == key {
+        (false, None)
+    }
+        
+    fn recursive_compound_search<'a>(&self, tag_compound: &'a nbt_tag::NbtTagCompound, key: &str) -> (bool, Option<&'a nbt_tag::NbtTagCompound>) {
+    
+            if tag_compound.name == key {
+                return (true, Some(tag_compound));
+            }
+            else {
+                for (_, v) in tag_compound.values.iter() {
+                    if v.ty() == nbt_tag::NbtTagType::Compound {
+                        let compound_option = v.compound_as_ref();
+                        
+                        if let Some(compound) = compound_option {
+                            let (found, compound_ref) = self.recursive_compound_search(&compound, key);
+                            if found {
+                                return (true, compound_ref);
+                            }
+                        }
+                    }
+                }
+            }
+    
+            (false, None)
+        
+        
+        /* /* if tag_compound.name == key {
             return true;
         }
         else  */{
@@ -175,7 +208,7 @@ impl McWorldDescriptor {
             }
         }
     
-        (false, nbt_tag::NbtTag::End)
+        (false, nbt_tag::NbtTag::End) */
     }
 
     /* fn read_from_binary_file(input_path: PathBuf) -> std::io::Result<Vec<nbt_tag::NbtTagCompound>> {

@@ -13,10 +13,10 @@ fn bigtest() {
     // Confirm that values are correct
     let mc_world = mc_world.unwrap();
     
-    let mut compound_found = mc_world.search("intTest");
+    let (mut compound_found, mut compound_ref) = mc_world.search_compound("ham");
     assert_eq!(compound_found, true);
 
-    compound_found = mc_world.search("intTTest"); //2 T, expected false
+    (compound_found, compound_ref) = mc_world.search_compound("hamm"); //2 T, expected false
     assert_eq!(compound_found, false);
     //let c = mc_world.tag_compounds_list.get(0).unwrap().values.clone();
 
