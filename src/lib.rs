@@ -191,6 +191,26 @@ impl McWorldDescriptor {
                             }
                         }
                     }
+                    else if v.ty() == nbt_tag::NbtTagType::List {
+                        let list_option = v.list_as_ref();
+                        if let Some(list_option) = list_option {
+                            for item in list_option.values.iter() {
+                                if item.ty() == nbt_tag::NbtTagType::Compound {
+                                    let compound_option = item.compound_as_ref();
+                                    if let Some(compound) = compound_option {
+                                        let (found, compound_ref) = self.recursive_compound_search(&compound, key);
+                                        if found {
+                                            return (true, compound_ref);
+                                        }
+                                    }
+                                }
+                                
+                            }
+                        }
+                        
+                        
+                        
+                    }
                 }
             }
     

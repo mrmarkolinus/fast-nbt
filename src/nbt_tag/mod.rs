@@ -267,6 +267,14 @@ impl NbtTag {
         }
     }
 
+    pub fn list_as_ref(&self) -> Option<&NbtTagList> {
+        if let NbtTag::List(x) = self {
+            Some(x)
+        } else {
+            None
+        }
+    }
+
     pub fn compound(&self) -> Option<NbtTagCompound> {
         if let NbtTag::Compound(x) = self {
             Some(x.clone())
