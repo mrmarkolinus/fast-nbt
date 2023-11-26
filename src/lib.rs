@@ -154,27 +154,28 @@ impl McWorldDescriptor {
 
     pub fn search(&self, key: &str) -> bool {
         for map in self.tag_compounds_list.iter() {
-            if self.recursive_compound_search(&map, key) {
+            let (found, nbt_tag) = self.recursive_compound_search(&map, key);
+            if found {    
                 return true;
             }
         }
         false
     }
 
-    fn recursive_compound_search(&self, tag_compound: &nbt_tag::NbtTagCompound, key: &str) -> bool {
+    fn recursive_compound_search(&self, tag_compound: &nbt_tag::NbtTagCompound, key: &str) -> (bool, nbt_tag::NbtTag) {
         
-        if tag_compound.name == key {
+        /* if tag_compound.name == key {
             return true;
         }
-        else {
+        else  */{
             for (k, v) in tag_compound.values.iter() {
                 if k == key {
-                    return true;
+                    return (true, v.clone());
                 }
             }
         }
     
-        false
+        (false, nbt_tag::NbtTag::End)
     }
 
     /* fn read_from_binary_file(input_path: PathBuf) -> std::io::Result<Vec<nbt_tag::NbtTagCompound>> {
