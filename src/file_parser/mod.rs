@@ -24,7 +24,7 @@ pub struct FileParser {
 }
 
 impl FileParser {
-    pub fn new(file_path: &PathBuf, read_mode: ReadMode, file_type: generic_bin::FileType) -> Self {
+    pub fn new(file_path: PathBuf, read_mode: ReadMode, file_type: generic_bin::FileType) -> Self {
         FileParser { 
             file_path: file_path.to_path_buf(), 
             read_mode,
@@ -158,8 +158,11 @@ fn parse_list(cursor: &mut Cursor<&[u8]>, name: String) -> Result<NbtTagList, ()
 
     for _ in 0..len {
         let val = parse_value(cursor, ty, "".to_string())?;
-        values.push(val)
+        // expose to python
+        //let py_val = PyNbtTag::new(&val);
+        values.push(val);
     }
+
 
     Ok(NbtTagList::new(name, ty, values))
 }
