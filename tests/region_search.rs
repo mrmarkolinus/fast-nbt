@@ -13,10 +13,10 @@ fn read_region_file() {
     // Confirm that values are correct
     let mc_world = mc_world.unwrap();
     
-    let (mut compound_found, mut compound_ref) = mc_world.search_compound("block_states");
+    let (mut compound_found, mut compound_ref) = mc_world.search_compound("block_states", false);
     assert_eq!(compound_found, true);
 
-    (compound_found, compound_ref) = mc_world.search_compound("blockstates"); //2 T, expected false
+    (compound_found, compound_ref) = mc_world.search_compound("blockstates", false); //2 T, expected false
     assert_eq!(compound_found, false);
     
 }

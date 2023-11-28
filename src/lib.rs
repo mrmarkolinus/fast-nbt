@@ -73,11 +73,23 @@ impl PyMcWorldDescriptor {
         self.mc_world_descriptor.get_mc_version()
     }
 
-    pub fn search_compound(&self, key: &str) -> (bool, Py<PyDict>) {
+    pub fn search_compound(&self, key: &str) -> (bool, Vec::<Py<PyDict>>) {
         
-        let (compound_found, compound_tag_option) = self.mc_world_descriptor.search_compound(key);
+        let mut py_tag_list = Vec::<Py<PyDict>>::new();
 
-        match compound_tag_option {
+        let (compound_found, compound_tag_list) = self.mc_world_descriptor.search_compound(key, false);
+        
+        if compound_found {
+            for item in compound_tag_list {
+                let tag_root = nbt_tag::NbtTag::Compound(item.clone());
+                py_tag_list.push(PyNbtTag::new(&tag_root).python_dict);
+            }
+            (true, py_tag_list)
+        } else {
+            (false, py_tag_list)
+        }
+
+       /*  match compound_tag_option {
             None => {
                 let empty_dict = Python::with_gil(|py| { PyDict::new(py).into() });
                 (compound_found, empty_dict)
@@ -86,10 +98,11 @@ impl PyMcWorldDescriptor {
                 let tag_root = nbt_tag::NbtTag::Compound(compound_tag.clone());
                 (compound_found, PyNbtTag::new(&tag_root).python_dict)
             }
-        }
-        
-
+        } */
     }
+
+        
+        
 
     /* pub fn from_json(&self, path: String) -> PyResult<Self> {
         let path = PathBuf::from(path);
@@ -180,59 +193,71 @@ impl McWorldDescriptor {
         false
     } */
 
-    pub fn search_compound(&self, key: &str) ->  (bool, Option<&nbt_tag::NbtTagCompound>) {
-        for tag_compound in self.tag_compounds_list.iter() {
-            let (compound_found, tag_compound_option) = self.recursive_compound_search(tag_compound, key);
+    pub fn search_compound(&self, key: &str, stop_at_first: bool) ->  (bool, Vec::<&nbt_tag::NbtTagCompound>) {
+        
+        let mut result_list = Vec::<&nbt_tag::NbtTagCompound>::new();
 
-            if compound_found {
-                return (true, tag_compound_option);
+        for tag_compound in self.tag_compounds_list.iter() {
+            let compound_found = self.recursive_compound_search(tag_compound, &mut result_list, key, stop_at_first);
+            
+            if compound_found && stop_at_first {
+                return (true, result_list);
             }
         }
-        
-        (false, None)
+
+        if result_list.is_empty() {
+            return (false, result_list);
+        }
+        else {
+            return (true, result_list);
+        }
     }
         
-    fn recursive_compound_search<'a>(&self, tag_compound: &'a nbt_tag::NbtTagCompound, key: &str) -> (bool, Option<&'a nbt_tag::NbtTagCompound>) {
-    
-            if tag_compound.name == key {
-                return (true, Some(tag_compound));
-            }
-            else {
-                for (_, v) in tag_compound.values.iter() {
-                    if v.ty() == nbt_tag::NbtTagType::Compound {
-                        let compound_option = v.compound_as_ref();
-                        
-                        if let Some(compound) = compound_option {
-                            let (found, compound_ref) = self.recursive_compound_search(&compound, key);
-                            if found {
-                                return (true, compound_ref);
-                            }
-                        }
+    fn recursive_compound_search<'a>(&self, tag_compound: &'a nbt_tag::NbtTagCompound, 
+                                            result_list: &mut Vec<&'a nbt_tag::NbtTagCompound>, 
+                                            key: &str, 
+                                            stop_at_first: bool) 
+                                            -> bool {
+            
+        //End condition: a compound matches the key
+        if tag_compound.name == key {
+            result_list.push(tag_compound);
+            return true;
+        }
+        
+        //Recursion
+        for (_, v) in tag_compound.values.iter() {
+            if v.ty() == nbt_tag::NbtTagType::Compound {
+                let compound_option = v.compound_as_ref();
+                
+                if let Some(compound) = compound_option {
+                    let compound_found = self.recursive_compound_search(&compound, result_list, key, stop_at_first);
+                    
+                    if compound_found && stop_at_first {
+                        return true;
                     }
-                    else if v.ty() == nbt_tag::NbtTagType::List {
-                        let list_option = v.list_as_ref();
-                        if let Some(list_option) = list_option {
-                            for item in list_option.values.iter() {
-                                if item.ty() == nbt_tag::NbtTagType::Compound {
-                                    let compound_option = item.compound_as_ref();
-                                    if let Some(compound) = compound_option {
-                                        let (found, compound_ref) = self.recursive_compound_search(&compound, key);
-                                        if found {
-                                            return (true, compound_ref);
-                                        }
-                                    }
-                                }
-                                
+                }
+            }
+            else if v.ty() == nbt_tag::NbtTagType::List {
+                let list_option = v.list_as_ref();
+                if let Some(list_option) = list_option {
+                    for item in list_option.values.iter() {
+                        if item.ty() == nbt_tag::NbtTagType::Compound {
+                            let compound_option = item.compound_as_ref();
+                            if let Some(compound) = compound_option {
+                                let compound_found = self.recursive_compound_search(&compound, result_list, key, stop_at_first);
+                                    if compound_found && stop_at_first {
+                                        return true;
+                                    } 
                             }
                         }
-                        
-                        
                         
                     }
                 }
             }
-    
-            (false, None)
+        }
+        
+        false
     }
 
     /* fn read_from_binary_file(input_path: PathBuf) -> std::io::Result<Vec<nbt_tag::NbtTagCompound>> {
