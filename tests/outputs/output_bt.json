@@ -7,10 +7,16 @@
         "value": 2147483647
       }
     },
-    "longTest": {
-      "Long": {
-        "name": "longTest",
-        "value": 9223372036854775807
+    "shortTest": {
+      "Short": {
+        "name": "shortTest",
+        "value": 32767
+      }
+    },
+    "byteTest": {
+      "Byte": {
+        "name": "byteTest",
+        "value": 127
       }
     },
     "byteArrayTest (the first 1000 values of (n*n*255+n*7)%100, starting with n=0 (0, 62, 34, 16, 8, ...))": {
@@ -1026,60 +1032,22 @@
         "value": 0.4931287132182315
       }
     },
+    "longTest": {
+      "Long": {
+        "name": "longTest",
+        "value": 9223372036854775807
+      }
+    },
     "stringTest": {
       "String": {
         "name": "stringTest",
         "value": "HELLO WORLD THIS IS A TEST STRING ÃÃÃ!"
       }
     },
-    "listTest (long)": {
-      "List": {
-        "name": "listTest (long)",
-        "ty": "Long",
-        "values": [
-          {
-            "Long": {
-              "name": "",
-              "value": 11
-            }
-          },
-          {
-            "Long": {
-              "name": "",
-              "value": 12
-            }
-          },
-          {
-            "Long": {
-              "name": "",
-              "value": 13
-            }
-          },
-          {
-            "Long": {
-              "name": "",
-              "value": 14
-            }
-          },
-          {
-            "Long": {
-              "name": "",
-              "value": 15
-            }
-          }
-        ]
-      }
-    },
-    "shortTest": {
-      "Short": {
-        "name": "shortTest",
-        "value": 32767
-      }
-    },
-    "byteTest": {
-      "Byte": {
-        "name": "byteTest",
-        "value": 127
+    "floatTest": {
+      "Float": {
+        "name": "floatTest",
+        "value": 0.49823147
       }
     },
     "listTest (compound)": {
@@ -1128,10 +1096,67 @@
         ]
       }
     },
+    "listTest (long)": {
+      "List": {
+        "name": "listTest (long)",
+        "ty": "Long",
+        "values": [
+          {
+            "Long": {
+              "name": "",
+              "value": 11
+            }
+          },
+          {
+            "Long": {
+              "name": "",
+              "value": 12
+            }
+          },
+          {
+            "Long": {
+              "name": "",
+              "value": 13
+            }
+          },
+          {
+            "Long": {
+              "name": "",
+              "value": 14
+            }
+          },
+          {
+            "Long": {
+              "name": "",
+              "value": 15
+            }
+          }
+        ]
+      }
+    },
     "nested compound test": {
       "Compound": {
         "name": "nested compound test",
         "values": {
+          "egg": {
+            "Compound": {
+              "name": "egg",
+              "values": {
+                "name": {
+                  "String": {
+                    "name": "name",
+                    "value": "Eggbert"
+                  }
+                },
+                "value": {
+                  "Float": {
+                    "name": "value",
+                    "value": 0.5
+                  }
+                }
+              }
+            }
+          },
           "ham": {
             "Compound": {
               "name": "ham",
@@ -1150,33 +1175,8 @@
                 }
               }
             }
-          },
-          "egg": {
-            "Compound": {
-              "name": "egg",
-              "values": {
-                "value": {
-                  "Float": {
-                    "name": "value",
-                    "value": 0.5
-                  }
-                },
-                "name": {
-                  "String": {
-                    "name": "name",
-                    "value": "Eggbert"
-                  }
-                }
-              }
-            }
           }
         }
-      }
-    },
-    "floatTest": {
-      "Float": {
-        "name": "floatTest",
-        "value": 0.49823147
       }
     }
   }

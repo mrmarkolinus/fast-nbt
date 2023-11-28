@@ -73,6 +73,24 @@ impl PyMcWorldDescriptor {
         self.mc_world_descriptor.get_mc_version()
     }
 
+    pub fn search_compound(&self, key: &str) -> (bool, Py<PyDict>) {
+        
+        let (compound_found, compound_tag_option) = self.mc_world_descriptor.search_compound(key);
+
+        match compound_tag_option {
+            None => {
+                let empty_dict = Python::with_gil(|py| { PyDict::new(py).into() });
+                (compound_found, empty_dict)
+            },
+            Some(compound_tag) => {
+                let tag_root = nbt_tag::NbtTag::Compound(compound_tag.clone());
+                (compound_found, PyNbtTag::new(&tag_root).python_dict)
+            }
+        }
+        
+
+    }
+
     /* pub fn from_json(&self, path: String) -> PyResult<Self> {
         let path = PathBuf::from(path);
         let file = fs::File::open(&path)
@@ -152,7 +170,7 @@ impl McWorldDescriptor {
 
     }
 
-    pub fn search(&self, key: &str) -> bool {
+    /* pub fn search(&self, key: &str) -> bool {
         for map in self.tag_compounds_list.iter() {
             let (found, nbt_tag) = self.recursive_compound_search(&map, key);
             if found {    
@@ -160,7 +178,7 @@ impl McWorldDescriptor {
             }
         }
         false
-    }
+    } */
 
     pub fn search_compound(&self, key: &str) ->  (bool, Option<&nbt_tag::NbtTagCompound>) {
         for tag_compound in self.tag_compounds_list.iter() {
@@ -215,20 +233,6 @@ impl McWorldDescriptor {
             }
     
             (false, None)
-        
-        
-        /* /* if tag_compound.name == key {
-            return true;
-        }
-        else  */{
-            for (k, v) in tag_compound.values.iter() {
-                if k == key {
-                    return (true, v.clone());
-                }
-            }
-        }
-    
-        (false, nbt_tag::NbtTag::End) */
     }
 
     /* fn read_from_binary_file(input_path: PathBuf) -> std::io::Result<Vec<nbt_tag::NbtTagCompound>> {
