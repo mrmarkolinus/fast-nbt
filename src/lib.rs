@@ -183,15 +183,48 @@ impl McWorldDescriptor {
 
     }
 
-    /* pub fn search(&self, key: &str) -> bool {
-        for map in self.tag_compounds_list.iter() {
-            let (found, nbt_tag) = self.recursive_compound_search(&map, key);
-            if found {    
-                return true;
+    pub fn search_block(&self, block_resouce_location: &str, stop_at_first: bool) ->  (bool) {
+        
+        // Refer to https://minecraft.fandom.com/wiki/Chunk_format to see how a block is saved in a chunk
+        
+        let (compound_found, block_states_list) = self.search_compound("block_states", stop_at_first);
+        let mut block_found = false;
+
+        if compound_found {
+            for block_states_compound in block_states_list {
+                
+                for (tag_key, tag_value) in block_states_compound.values.iter() {
+                    //palette is a TAG List
+                    if tag_value.ty() == nbt_tag::NbtTagType::List && tag_key == "palette" {
+                        let list_option = tag_value.list_as_ref();
+                        if let Some(list_option) = list_option {
+                            for blocks in list_option.values.iter() {
+                                //blocks are TAG compound
+                                if blocks.ty() == nbt_tag::NbtTagType::Compound {
+                                    let block_compound_option = blocks.compound_as_ref();
+                                    if let Some(block_compound) = block_compound_option {
+                                        for (block_field_key, block_field_value) in block_compound.values.iter() {
+                                            if block_field_key == "Name" && block_field_value.ty() == nbt_tag::NbtTagType::String {
+                                            // finally reached the block name
+                                            //TODO: remove unwrap
+                                                if block_field_value.string().unwrap().value == block_resouce_location {
+                                                    block_found = true;
+                                                }
+                                            }     
+                                        } 
+                                    }
+
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
-        false
-    } */
+
+        block_found
+
+    } 
 
     pub fn search_compound(&self, key: &str, stop_at_first: bool) ->  (bool, Vec::<&nbt_tag::NbtTagCompound>) {
         
