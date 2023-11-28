@@ -186,6 +186,10 @@ impl McWorldDescriptor {
     pub fn search_block(&self, block_resouce_location: &str, stop_at_first: bool) ->  (bool) {
         
         // Refer to https://minecraft.fandom.com/wiki/Chunk_format to see how a block is saved in a chunk
+        // block_states (TAG Compound)
+        // -- palette (TAG List)
+        // ---- block (TAG Compound)
+        // ------ Name (TAG String)
         
         let (compound_found, block_states_list) = self.search_compound("block_states", stop_at_first);
         let mut block_found = false;
