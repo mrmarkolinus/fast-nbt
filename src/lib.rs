@@ -186,42 +186,26 @@ impl McWorldDescriptor {
     pub fn search_block(&self, block_resouce_location: &str, stop_at_first: bool) ->  (bool) {
         
         // Refer to https://minecraft.fandom.com/wiki/Chunk_format to see how a block is saved in a chunk
+        //sections (TAG List)
         // block_states (TAG Compound)
         // -- palette (TAG List)
         // ---- block (TAG Compound)
         // ------ Name (TAG String)
         
-        let (compound_found, block_states_list) = self.search_compound("block_states", stop_at_first);
+        //let (compound_found, block_states_list) = self.search_compound("block_states", stop_at_first);
         let mut block_found = false;
 
-        if compound_found {
-            for block_states_compound in block_states_list {
-                
-                for (tag_key, tag_value) in block_states_compound.values.iter() {
-                    //palette is a TAG List
-                    if tag_value.ty() == nbt_tag::NbtTagType::List && tag_key == "palette" {
-                        let list_option = tag_value.list_as_ref();
-                        if let Some(list_option) = list_option {
-                            for blocks in list_option.values.iter() {
-                                //blocks are TAG compound
-                                if blocks.ty() == nbt_tag::NbtTagType::Compound {
-                                    let block_compound_option = blocks.compound_as_ref();
-                                    if let Some(block_compound) = block_compound_option {
-                                        for (block_field_key, block_field_value) in block_compound.values.iter() {
-                                            if block_field_key == "Name" && block_field_value.ty() == nbt_tag::NbtTagType::String {
-                                            // finally reached the block name
-                                            //TODO: remove unwrap
-                                                if block_field_value.string().unwrap().value == block_resouce_location {
-                                                    block_found = true;
-                                                }
-                                            }     
-                                        } 
-                                    }
-
-                                }
+        if let Some(sections_tag) = self.tag_compounds_list[0].values.get("sections") {
+            if let Some(sections_list) = sections_tag.list_as_ref(){
+                for sections in sections_list.values.iter() {
+                    if let Some(block_states_tag) = self.find_block_states_in_section(sections) {
+                        if let Some(palette_list) = self.find_palette_in_block_states(block_states_tag) {
+                            for blocks in palette_list.values.iter() {
+                                block_found = self.find_block_name_in_palette(blocks, block_resouce_location);
                             }
                         }
                     }
+
                 }
             }
         }
@@ -229,6 +213,59 @@ impl McWorldDescriptor {
         block_found
 
     } 
+
+    fn find_block_states_in_section<'a>(&self, block_states_tag: & 'a nbt_tag::NbtTag) -> Option<& 'a nbt_tag::NbtTag> {    
+
+        if let Some(block_states_compound) = block_states_tag.compound_as_ref() {
+            if let Some(block_states) = block_states_compound.values.get("block_states") {
+                Some(block_states)
+            }
+            else {
+                None
+            }
+        }
+        else {
+            None
+        }
+    }
+
+    fn find_palette_in_block_states<'a>(&self, block_states_tag: & 'a nbt_tag::NbtTag) -> Option<&'a nbt_tag::NbtTagList> {
+        
+        if let Some(block_states_compound) = block_states_tag.compound_as_ref() {
+            if let Some(palette_tag) = block_states_compound.values.get("palette") {
+                if let Some(palette_list) = palette_tag.list_as_ref() {
+                    Some(palette_list)
+                }
+                else {
+                    None
+                }
+            }
+            else {
+                None
+            }
+        }
+        else {
+            None
+        }
+
+    }
+
+    fn find_block_name_in_palette(&self, blocks_tag: &nbt_tag::NbtTag, block_resouce_location: &str) -> bool {
+        
+        let mut block_name_found = false;
+        
+        if let Some(block_compound) = blocks_tag.compound_as_ref() {
+            if let Some(block_name_tag) = block_compound.values.get("Name") {
+                if let Some(block_name) = block_name_tag.string() {
+                    if block_name.value == block_resouce_location {
+                        block_name_found = true
+                    }
+                }
+            }
+        }
+
+        block_name_found
+    }
 
     pub fn search_compound(&self, key: &str, stop_at_first: bool) ->  (bool, Vec::<&nbt_tag::NbtTagCompound>) {
         
