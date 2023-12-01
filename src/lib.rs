@@ -191,9 +191,8 @@ impl McWorldDescriptor {
         // -- palette (TAG List)
         // ---- block (TAG Compound)
         // ------ Name (TAG String)
-        
-        //let (compound_found, block_states_list) = self.search_compound("block_states", stop_at_first);
-        let mut block_found = false;
+
+        let mut at_least_one_block_found = false;
 
         if let Some(sections_tag) = self.tag_compounds_list[0].values.get("sections") {
             if let Some(sections_list) = sections_tag.list_as_ref(){
@@ -201,7 +200,10 @@ impl McWorldDescriptor {
                     if let Some(block_states_tag) = self.find_block_states_in_section(sections) {
                         if let Some(palette_list) = self.find_palette_in_block_states(block_states_tag) {
                             for blocks in palette_list.values.iter() {
-                                block_found = self.find_block_name_in_palette(blocks, block_resouce_location);
+                                let block_found = self.find_block_name_in_palette(blocks, block_resouce_location);
+                                if at_least_one_block_found == false && block_found {
+                                    at_least_one_block_found = true;
+                                }
                             }
                         }
                     }
@@ -210,7 +212,7 @@ impl McWorldDescriptor {
             }
         }
 
-        block_found
+        at_least_one_block_found
 
     } 
 
