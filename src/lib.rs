@@ -199,11 +199,13 @@ impl McWorldDescriptor {
         let mut blocks_positions_list = Vec::<blocks::Coordinates>::new();
 
         for tag_compound in self.tag_compounds_list.iter() {
+            let chunk_pos = self.get_chunk_coordinates(tag_compound);
+            
             if let Some(sections_tag) = tag_compound.values.get("sections") {
                 if let Some(sections_list) = sections_tag.list_as_ref(){
                     for sections in sections_list.values.iter() {
                         if let Some(block_states_tag) = self.find_block_states_in_section(sections) {
-                            _ = self.get_block_positions_in_subchunk(block_states_tag, block_resource_location, &mut blocks_positions_list);
+                            _ = self.get_block_positions_in_subchunk(block_states_tag, block_resource_location, &chunk_pos, &mut blocks_positions_list);
                         }
                     }
                 }
@@ -215,7 +217,7 @@ impl McWorldDescriptor {
     } 
 
 
-    fn get_block_positions_in_subchunk(&self, block_states_tag: &nbt_tag::NbtTag, block_resource_location: &str, blocks_positions_list: &mut Vec<blocks::Coordinates>) -> bool {
+    fn get_block_positions_in_subchunk(&self, block_states_tag: &nbt_tag::NbtTag, block_resource_location: &str, chunk_pos: &blocks::Coordinates, blocks_positions_list: &mut Vec<blocks::Coordinates>) -> bool {
         /* #10: Find palette TAG list in block states following the format https://minecraft.fandom.com/wiki/Chunk_format
         * block_states (TAG Compound)
         * -- palette (TAG List)
@@ -267,7 +269,10 @@ impl McWorldDescriptor {
                                     for palette_id in palette_ids {
                                         //we are interested only in the searched block
                                         if palette_id == palette_current_index {
-                                            blocks_positions_list.push(blocks::Coordinates::new([subchunk_x_pos, subchunk_y_pos, subchunk_z_pos].to_vec()));
+                                            blocks_positions_list.push(blocks::Coordinates::new(
+                                                    [(chunk_pos.x * 16) + subchunk_x_pos, 
+                                                            (chunk_pos.y * 16) + subchunk_y_pos, 
+                                                            (chunk_pos.z * 16) + subchunk_z_pos].to_vec()));
                                         }
                                         
                                         if subchunk_x_pos == 15 {
@@ -352,38 +357,27 @@ impl McWorldDescriptor {
         palette_id_array
     }
 
-    fn get_block_info(&self, tag_compound: &nbt_tag::NbtTagCompound, block_tag: &nbt_tag::NbtTag, block_name: &str) {
-        
-        let chunk_coordinates = self.extract_chunk_coordinates(tag_compound);
-
-        let mut new_block = blocks::MinecraftBlock::new("prova".to_string(), [0, 0, 0].to_vec(), chunk_coordinates);
-
-        if let Some(blocks_compound) = block_tag.compound_as_ref() {
-            
-        }
-    }
-
-    fn extract_chunk_coordinates(&self, chunk_compound: &nbt_tag::NbtTagCompound) -> Vec<i32> {
+    fn get_chunk_coordinates(&self, chunk_compound: &nbt_tag::NbtTagCompound) -> blocks::Coordinates {
     
-        let mut result = Vec::<i32>::new();
+        let mut result: blocks::Coordinates = blocks::Coordinates::new(vec![0, 0, 0]);
         
         if let Some(x_coord_tag) = chunk_compound.values.get("xPos") {
             if let Some(x_coord) = x_coord_tag.int() {
-                result.push(x_coord.value);
+                result.x = x_coord.value;
             }
             
         }
 
         if let Some(y_coord_tag) = chunk_compound.values.get("yPos") {
             if let Some(y_coord) = y_coord_tag.int() {
-                result.push(y_coord.value);
+                result.y = y_coord.value;
             }
             
         }
 
         if let Some(z_coord_tag) = chunk_compound.values.get("zPos") {
             if let Some(z_coord) = z_coord_tag.int() {
-                result.push(z_coord.value);
+                result.z = z_coord.value;
             }
             
         }

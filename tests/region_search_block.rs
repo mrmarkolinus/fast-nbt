@@ -4,15 +4,15 @@ use rnbt::McWorldDescriptor;
 use std::path::PathBuf;
 
 #[test]
-fn read_region_file() {
+fn region_search_blocks() {
     let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    path.push("tests/resources/r.0.0.mca");
+    path.push("tests/resources/test_world/r.-1.0.mca");
 
     let mc_world = McWorldDescriptor::new(path);
 
     // Confirm that values are correct
     let mc_world = mc_world.unwrap();
     
-    let block_positions = mc_world.search_block("minecraft:bedrock");
+    let block_positions = mc_world.search_block("minecraft:repeater");
     //assert_eq!(compound_found, true);
 }
