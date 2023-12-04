@@ -216,20 +216,7 @@ impl McWorldDescriptor {
 
                                             match blocks_data_array_option {
                                                 Some(blocks_data_array) => {
-                                                    // the number of palettes in the section determines the number of bits used for the indexes in data
-                                                    // the indexes in data are n bits long, where n is the number needed to represent all the palettes (log2(n_palettes))
-                                                    // minimum 4 bits
-                                                    // example: 4 palettes = 2 bits needed to represent them. 4 used
-                                                    // example: 36 palettes = 6 bits needed to represent them. 6 used
-                                                    let num_palette_in_section = palette_list.values.len() as u32;
-            
-                                                    //fast log2 function. index of the palette start from 0
-                                                    let num_bits = (std::mem::size_of_val(&num_palette_in_section) * 8) as u32;
-                                                    let mut data_index_bit_size = num_bits - (num_palette_in_section - 1).leading_zeros();
-                                                    if data_index_bit_size < 4 {
-                                                        data_index_bit_size = 4;
-                                                    }
-
+                                                    let data_index_bit_size = self.get_palette_id_size_in_bit(palette_list);
                                                     let palette_ids = self.get_palette_ids_from_data_array_element(blocks_data_array[16], data_index_bit_size);
 
                                                 },
@@ -263,10 +250,121 @@ impl McWorldDescriptor {
     } 
 
 
+    fn get_block_position_in_subchunk(&self, block_states_tag: &nbt_tag::NbtTag, block_resource_location: &str) {
+        /* #10: Find palette TAG list in block states following the format https://minecraft.fandom.com/wiki/Chunk_format
+        * block_states (TAG Compound)
+        * -- palette (TAG List)
+        */
+        let (palette_list_option, blocks_data_array_option) = self.find_palette_in_block_states(block_states_tag);
+
+        match palette_list_option {
+            Some(palette_list) => {
+                let mut palette_current_index = 0;
+                for blocks in palette_list.values.iter() {
+                    /* #20: scan every block in the palette and check if the name is the one we are looking for
+                    * -- palette (TAG List)
+                    * ---- block (TAG Compound)
+                    * ------ Name (TAG String)
+                    */
+                    let block_found = self.find_block_name_in_palette(blocks, block_resource_location);
+                    if block_found{
+                        match blocks_data_array_option {
+                            /* #30: if the searched block was found scan the data array associated to the palette.
+                            * A data array is a 64bit unsing integer array with a specific format (see Chunk_format)
+                            * A data array needs to contain all the blocks in the subchunk (section), which is 16x16x16
+                            * The blocks are saved as id referincing the palette and compressed in 64bit unsigned integer
+                            * Example:  palette list {minecraft:bedrock, minecreat:stone, minecraft:dirt}
+                            *           we need 2 bits to represent the 3 possible blocks in the section (0, 1, 2)
+                            *           the chunk file format specifies that min 4 bits must be used, so we get 4 bits.
+                            *           data array dec:     1180177 
+                            *           data array bin:     0000 0000 0001 0010 0000 0010 0001 0001
+                            *           data array palette: bedrock bedrock stone dirt bedrock dirt stone stone
+                            * For more details refer to https://minecraft.fandom.com/wiki/Chunk_format
+                            */
+
+                            Some(blocks_data_array) => { 
+                                let data_index_bit_size = self.get_palette_id_size_in_bit(palette_list);
+                                let palette_ids = self.get_palette_ids_from_data_array_element(blocks_data_array[16], data_index_bit_size);
+
+                                /* #40: get the block position in the subchunk 
+                                * block position is a tridimensional coordinate x,y,z. The blocks are stored with YZX order
+                                * X increases each block
+                                * Z increases each 16 blocks
+                                * Y increases each 16x16 = 256 blocks
+                                */
+
+                                let mut subchunk_x_pos = 0;
+                                let mut subchunk_y_pos = 0;
+                                let mut subchunk_z_pos = 0;                        
+
+                                for palette_id in palette_ids {
+                                    //we are interested only in the searched block
+                                    if palette_id == palette_current_index {
+                                        
+                                    }
+                                    
+                                    if subchunk_x_pos == 15 {
+                                        if subchunk_z_pos == 15 {
+                                            subchunk_y_pos += 1;
+                                            subchunk_z_pos = 0;
+                                            subchunk_x_pos = 0;
+                                        }
+                                        else {
+                                            subchunk_z_pos += 1;
+                                            subchunk_x_pos = 0;
+                                        }    
+                                    }
+                                    else {
+                                        subchunk_x_pos += 1;
+                                    }
+                                    
+                                }
+                            },
+                            None => {
+                                //TODO
+                            }
+                        }
+                        
+                        //self.get_block_info(tag_compound, blocks, block_resource_location);
+
+                    }
+
+                    palette_current_index += 1;
+                }
+            },
+            None => {
+                
+            }
+            
+        }
+    }
+
+    fn get_palette_id_size_in_bit(&self, palette_list: &nbt_tag::NbtTagList) -> u32 {
+        /* the number of palettes in the section determines the number of bits used for the indexes in data
+        * the indexes in data are n bits long, where n is the number needed to represent all the palettes (log2(n_palettes))
+        * minimum 4 bits
+        * example: 4 palettes = 2 bits needed to represent them. 4 used
+        * example: 36 palettes = 6 bits needed to represent them. 6 used
+         */
+        let num_palette_in_section = palette_list.values.len() as u32;
+        let num_bits = (std::mem::size_of_val(&num_palette_in_section) * 8) as u32;
+        
+        //fast log2 function. index of the palette start from 0
+        let mut data_index_bit_size = num_bits - (num_palette_in_section - 1).leading_zeros();
+        
+        //as per Chunk file specification, the indexes cannot be shorter than 4bits
+        if data_index_bit_size < 4 {
+            data_index_bit_size = 4;
+        }
+
+        data_index_bit_size
+    
+    }
+
     fn get_palette_ids_from_data_array_element(&self, data_array_element : i64, index_size_in_bit : u32) -> Vec<u32> {
 
         /* given a 64bit unsigned integer it splits it into n indexes and n values.
-         * where n is the number of indexes needed to represent all the palettes
+         * where n is the number of indexes that fits into a 64bit unsigned integer (calculate with get_palette_id_size_in_bit)
          * The value represent the block palette id in the palette TAG list
          * As per Chunk file specification, the indexes cannot be split between more data elements, so some bits may be unused
          * Example: if index_size_in_bit is 4, there are 16 indexes
@@ -275,7 +373,6 @@ impl McWorldDescriptor {
 
         let bit_mask = (0xFFFFFFFFFFFFFFFF as u64 >> (64 - index_size_in_bit)) as u64;
         let indexes_in_data_element = (64 / index_size_in_bit) as u32;
-        
         let mut palette_id_array: Vec<u32> = Vec::with_capacity(indexes_in_data_element as usize);
 
         for element_data_index in 0..indexes_in_data_element {
