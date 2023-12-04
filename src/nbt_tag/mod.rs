@@ -307,6 +307,14 @@ impl NbtTag {
         }
     }
 
+    pub fn long_array_as_ref(&self) -> Option<&NbtTagLongArray> {
+        if let NbtTag::LongArray(x) = self {
+            Some(x)
+        } else {
+            None
+        }
+    }
+
 }
 
 

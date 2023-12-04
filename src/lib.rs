@@ -2,7 +2,10 @@ pub mod nbt_tag;
 pub mod file_parser;
 pub mod region;
 pub mod generic_bin;
+pub mod blocks;
 
+use blocks::Coordinates;
+use blocks::MinecraftBlock;
 use nbt_tag::NbtTag;
 use nbt_tag::NbtTagCompound;
 use serde::{ser::SerializeMap, Serialize, Deserialize};
@@ -183,7 +186,7 @@ impl McWorldDescriptor {
 
     }
 
-    pub fn search_block(&self, block_resouce_location: &str, stop_at_first: bool) ->  (bool) {
+    pub fn search_block(&self, block_resource_location: &str, stop_at_first: bool) ->  (bool) {
         
         // Refer to https://minecraft.fandom.com/wiki/Chunk_format to see how a block is saved in a chunk
         //sections (TAG List)
@@ -194,20 +197,63 @@ impl McWorldDescriptor {
 
         let mut at_least_one_block_found = false;
 
-        if let Some(sections_tag) = self.tag_compounds_list[0].values.get("sections") {
-            if let Some(sections_list) = sections_tag.list_as_ref(){
-                for sections in sections_list.values.iter() {
-                    if let Some(block_states_tag) = self.find_block_states_in_section(sections) {
-                        if let Some(palette_list) = self.find_palette_in_block_states(block_states_tag) {
-                            for blocks in palette_list.values.iter() {
-                                let block_found = self.find_block_name_in_palette(blocks, block_resouce_location);
-                                if at_least_one_block_found == false && block_found {
-                                    at_least_one_block_found = true;
+        for tag_compound in self.tag_compounds_list.iter() {
+            if let Some(sections_tag) = tag_compound.values.get("sections") {
+                if let Some(sections_list) = sections_tag.list_as_ref(){
+                    for sections in sections_list.values.iter() {
+                        if let Some(block_states_tag) = self.find_block_states_in_section(sections) {
+                            
+                            let (palette_list_option, blocks_data_array_option) = self.find_palette_in_block_states(block_states_tag);
+
+                            match palette_list_option {
+                                Some(palette_list) => {
+                                    for blocks in palette_list.values.iter() {
+                                        let block_found = self.find_block_name_in_palette(blocks, block_resource_location);
+                                        if block_found{
+                                            if at_least_one_block_found == false {
+                                                at_least_one_block_found = true;
+                                            }
+
+                                            match blocks_data_array_option {
+                                                Some(blocks_data_array) => {
+                                                    // the number of palettes in the section determines the number of bits used for the indexes in data
+                                                    // the indexes in data are n bits long, where n is the number needed to represent all the palettes (log2(n_palettes))
+                                                    // minimum 4 bits
+                                                    // example: 4 palettes = 2 bits needed to represent them. 4 used
+                                                    // example: 36 palettes = 6 bits needed to represent them. 6 used
+                                                    let num_palette_in_section = palette_list.values.len() as u32;
+            
+                                                    //fast log2 function. index of the palette start from 0
+                                                    let num_bits = (std::mem::size_of_val(&num_palette_in_section) * 8) as u32;
+                                                    let mut data_index_bit_size = num_bits - (num_palette_in_section - 1).leading_zeros();
+                                                    if data_index_bit_size < 4 {
+                                                        data_index_bit_size = 4;
+                                                    }
+
+                                                    let palette_ids = self.get_palette_ids_from_data_array_element(blocks_data_array[16], data_index_bit_size);
+
+                                                },
+                                                None => {
+                                                    //TODO
+                                                }
+                                            }
+                                            
+                                            
+    
+                                            self.get_block_info(tag_compound, blocks, block_resource_location);
+
+                                            
+    
+                                        }
+                                    }
+                                },
+                                None => {
+                                    
                                 }
+                                
                             }
                         }
                     }
-
                 }
             }
         }
@@ -215,6 +261,72 @@ impl McWorldDescriptor {
         at_least_one_block_found
 
     } 
+
+
+    fn get_palette_ids_from_data_array_element(&self, data_array_element : i64, index_size_in_bit : u32) -> Vec<u32> {
+
+        /* given a 64bit unsigned integer it splits it into n indexes and n values.
+         * where n is the number of indexes needed to represent all the palettes
+         * The value represent the block palette id in the palette TAG list
+         * As per Chunk file specification, the indexes cannot be split between more data elements, so some bits may be unused
+         * Example: if index_size_in_bit is 4, there are 16 indexes
+         * Example: if index_size in bit is 6, there are 10 indexes, the 4 most significant bits are not used
+         */
+
+        let bit_mask = (0xFFFFFFFFFFFFFFFF as u64 >> (64 - index_size_in_bit)) as u64;
+        let indexes_in_data_element = (64 / index_size_in_bit) as u32;
+        
+        let mut palette_id_array: Vec<u32> = Vec::with_capacity(indexes_in_data_element as usize);
+
+        for element_data_index in 0..indexes_in_data_element {
+            let shift_amount = element_data_index * index_size_in_bit;
+            let block_palette_id = (data_array_element as u64 >> shift_amount) & bit_mask;
+
+            palette_id_array.push(block_palette_id as u32);
+        }
+
+        palette_id_array
+    }
+
+    fn get_block_info(&self, tag_compound: &nbt_tag::NbtTagCompound, block_tag: &nbt_tag::NbtTag, block_name: &str) {
+        
+        let chunk_coordinates = self.extract_chunk_coordinates(tag_compound);
+
+        let mut new_block = blocks::MinecraftBlock::new("prova".to_string(), [0, 0, 0].to_vec(), chunk_coordinates);
+
+        if let Some(blocks_compound) = block_tag.compound_as_ref() {
+            
+        }
+    }
+
+    fn extract_chunk_coordinates(&self, chunk_compound: &nbt_tag::NbtTagCompound) -> Vec<i32> {
+    
+        let mut result = Vec::<i32>::new();
+        
+        if let Some(x_coord_tag) = chunk_compound.values.get("xPos") {
+            if let Some(x_coord) = x_coord_tag.int() {
+                result.push(x_coord.value);
+            }
+            
+        }
+
+        if let Some(y_coord_tag) = chunk_compound.values.get("yPos") {
+            if let Some(y_coord) = y_coord_tag.int() {
+                result.push(y_coord.value);
+            }
+            
+        }
+
+        if let Some(z_coord_tag) = chunk_compound.values.get("zPos") {
+            if let Some(z_coord) = z_coord_tag.int() {
+                result.push(z_coord.value);
+            }
+            
+        }
+        
+        result
+    
+    }
 
     fn find_block_states_in_section<'a>(&self, block_states_tag: & 'a nbt_tag::NbtTag) -> Option<& 'a nbt_tag::NbtTag> {    
 
@@ -231,23 +343,37 @@ impl McWorldDescriptor {
         }
     }
 
-    fn find_palette_in_block_states<'a>(&self, block_states_tag: & 'a nbt_tag::NbtTag) -> Option<&'a nbt_tag::NbtTagList> {
+    fn find_palette_in_block_states<'a>(&self, block_states_tag: & 'a nbt_tag::NbtTag) -> (Option<&'a nbt_tag::NbtTagList>, Option<&'a Vec::<i64>>) {
         
+        //let mut data_values = &Vec::<i64>::new();
+
         if let Some(block_states_compound) = block_states_tag.compound_as_ref() {
             if let Some(palette_tag) = block_states_compound.values.get("palette") {
                 if let Some(palette_list) = palette_tag.list_as_ref() {
-                    Some(palette_list)
+                    if let Some(data_values_tag) = block_states_compound.values.get("data") {
+                        if let Some(data_values_taglong) = data_values_tag.long_array_as_ref() {
+
+                            (Some(palette_list), Some(&data_values_taglong.values))
+                        }
+                        else {
+                            (Some(palette_list), None)
+                        }
+                    }
+                    else {
+                        (Some(palette_list), None)
+                    }    
+                    
                 }
                 else {
-                    None
+                    (None, None)
                 }
             }
             else {
-                None
+                (None, None)
             }
         }
         else {
-            None
+            (None, None)
         }
 
     }
