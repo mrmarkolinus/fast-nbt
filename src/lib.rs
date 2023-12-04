@@ -186,7 +186,7 @@ impl McWorldDescriptor {
 
     }
 
-    pub fn search_block(&self, block_resource_location: &str, stop_at_first: bool) ->  (bool) {
+    pub fn search_block(&self, block_resource_location: &str) ->  Vec::<blocks::Coordinates> {
         
         // Refer to https://minecraft.fandom.com/wiki/Chunk_format to see how a block is saved in a chunk
         //sections (TAG List)
@@ -195,66 +195,33 @@ impl McWorldDescriptor {
         // ---- block (TAG Compound)
         // ------ Name (TAG String)
 
-        let mut at_least_one_block_found = false;
+        //let mut at_least_one_block_found = false;
+        let mut blocks_positions_list = Vec::<blocks::Coordinates>::new();
 
         for tag_compound in self.tag_compounds_list.iter() {
             if let Some(sections_tag) = tag_compound.values.get("sections") {
                 if let Some(sections_list) = sections_tag.list_as_ref(){
                     for sections in sections_list.values.iter() {
                         if let Some(block_states_tag) = self.find_block_states_in_section(sections) {
-                            
-                            let (palette_list_option, blocks_data_array_option) = self.find_palette_in_block_states(block_states_tag);
-
-                            match palette_list_option {
-                                Some(palette_list) => {
-                                    for blocks in palette_list.values.iter() {
-                                        let block_found = self.find_block_name_in_palette(blocks, block_resource_location);
-                                        if block_found{
-                                            if at_least_one_block_found == false {
-                                                at_least_one_block_found = true;
-                                            }
-
-                                            match blocks_data_array_option {
-                                                Some(blocks_data_array) => {
-                                                    let data_index_bit_size = self.get_palette_id_size_in_bit(palette_list);
-                                                    let palette_ids = self.get_palette_ids_from_data_array_element(blocks_data_array[16], data_index_bit_size);
-
-                                                },
-                                                None => {
-                                                    //TODO
-                                                }
-                                            }
-                                            
-                                            
-    
-                                            self.get_block_info(tag_compound, blocks, block_resource_location);
-
-                                            
-    
-                                        }
-                                    }
-                                },
-                                None => {
-                                    
-                                }
-                                
-                            }
+                            _ = self.get_block_positions_in_subchunk(block_states_tag, block_resource_location, &mut blocks_positions_list);
                         }
                     }
                 }
             }
         }
 
-        at_least_one_block_found
+        blocks_positions_list
 
     } 
 
 
-    fn get_block_position_in_subchunk(&self, block_states_tag: &nbt_tag::NbtTag, block_resource_location: &str) {
+    fn get_block_positions_in_subchunk(&self, block_states_tag: &nbt_tag::NbtTag, block_resource_location: &str, blocks_positions_list: &mut Vec<blocks::Coordinates>) -> bool {
         /* #10: Find palette TAG list in block states following the format https://minecraft.fandom.com/wiki/Chunk_format
         * block_states (TAG Compound)
         * -- palette (TAG List)
         */
+
+        let mut block_found = false;
         let (palette_list_option, blocks_data_array_option) = self.find_palette_in_block_states(block_states_tag);
 
         match palette_list_option {
@@ -266,7 +233,7 @@ impl McWorldDescriptor {
                     * ---- block (TAG Compound)
                     * ------ Name (TAG String)
                     */
-                    let block_found = self.find_block_name_in_palette(blocks, block_resource_location);
+                    block_found = self.find_block_name_in_palette(blocks, block_resource_location);
                     if block_found{
                         match blocks_data_array_option {
                             /* #30: if the searched block was found scan the data array associated to the palette.
@@ -281,43 +248,43 @@ impl McWorldDescriptor {
                             *           data array palette: bedrock bedrock stone dirt bedrock dirt stone stone
                             * For more details refer to https://minecraft.fandom.com/wiki/Chunk_format
                             */
-
                             Some(blocks_data_array) => { 
                                 let data_index_bit_size = self.get_palette_id_size_in_bit(palette_list);
-                                let palette_ids = self.get_palette_ids_from_data_array_element(blocks_data_array[16], data_index_bit_size);
-
-                                /* #40: get the block position in the subchunk 
-                                * block position is a tridimensional coordinate x,y,z. The blocks are stored with YZX order
-                                * X increases each block
-                                * Z increases each 16 blocks
-                                * Y increases each 16x16 = 256 blocks
-                                */
 
                                 let mut subchunk_x_pos = 0;
                                 let mut subchunk_y_pos = 0;
-                                let mut subchunk_z_pos = 0;                        
+                                let mut subchunk_z_pos = 0;  
 
-                                for palette_id in palette_ids {
-                                    //we are interested only in the searched block
-                                    if palette_id == palette_current_index {
+                                for blocks_data in blocks_data_array {
+                                    let palette_ids = self.get_palette_ids_from_data_array_element(blocks_data.clone(), data_index_bit_size);
+                                
+                                    /* #40: get the block position in the subchunk 
+                                    * block position is a tridimensional coordinate x,y,z. The blocks are stored with YZX order
+                                    * X increases each block
+                                    * Z increases each 16 blocks
+                                    * Y increases each 16x16 = 256 blocks
+                                    */                      
+                                    for palette_id in palette_ids {
+                                        //we are interested only in the searched block
+                                        if palette_id == palette_current_index {
+                                            blocks_positions_list.push(blocks::Coordinates::new([subchunk_x_pos, subchunk_y_pos, subchunk_z_pos].to_vec()));
+                                        }
                                         
-                                    }
-                                    
-                                    if subchunk_x_pos == 15 {
-                                        if subchunk_z_pos == 15 {
-                                            subchunk_y_pos += 1;
-                                            subchunk_z_pos = 0;
-                                            subchunk_x_pos = 0;
+                                        if subchunk_x_pos == 15 {
+                                            if subchunk_z_pos == 15 {
+                                                subchunk_y_pos += 1;
+                                                subchunk_z_pos = 0;
+                                                subchunk_x_pos = 0;
+                                            }
+                                            else {
+                                                subchunk_z_pos += 1;
+                                                subchunk_x_pos = 0;
+                                            }    
                                         }
                                         else {
-                                            subchunk_z_pos += 1;
-                                            subchunk_x_pos = 0;
-                                        }    
+                                            subchunk_x_pos += 1;
+                                        } 
                                     }
-                                    else {
-                                        subchunk_x_pos += 1;
-                                    }
-                                    
                                 }
                             },
                             None => {
@@ -325,8 +292,7 @@ impl McWorldDescriptor {
                             }
                         }
                         
-                        //self.get_block_info(tag_compound, blocks, block_resource_location);
-
+                        break;
                     }
 
                     palette_current_index += 1;
@@ -335,8 +301,9 @@ impl McWorldDescriptor {
             None => {
                 
             }
-            
         }
+
+        block_found
     }
 
     fn get_palette_id_size_in_bit(&self, palette_list: &nbt_tag::NbtTagList) -> u32 {
