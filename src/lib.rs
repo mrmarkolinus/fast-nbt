@@ -301,8 +301,7 @@ impl McWorldDescriptor {
                                 //TODO
                             }
                         }
-                        
-                        break;
+
                     }
 
                     palette_current_index += 1;
