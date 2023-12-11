@@ -199,13 +199,18 @@ impl McWorldDescriptor {
         let mut blocks_positions_list = Vec::<blocks::Coordinates>::new();
 
         for tag_compound in self.tag_compounds_list.iter() {
-            let chunk_pos = self.get_chunk_coordinates(tag_compound);
+            let mut chunk_pos = self.get_chunk_coordinates(tag_compound);
             
             if let Some(sections_tag) = tag_compound.values.get("sections") {
                 if let Some(sections_list) = sections_tag.list_as_ref(){
                     for sections in sections_list.values.iter() {
                         if let Some(block_states_tag) = self.find_block_states_in_section(sections) {
-                            _ = self.get_block_positions_in_subchunk(block_states_tag, block_resource_location, &chunk_pos, &mut blocks_positions_list);
+                            //TODO: replace unwraps
+                            let subchunk_y_pos = sections.compound_as_ref().unwrap().values.get("Y").unwrap().byte().unwrap().value as i32;
+                            // The y position got from get_chunk_coordinates is always -4, since the chunk always starts at -4 * 16 = -64
+                            // what we need is the actual subchunk position
+                            chunk_pos.y = subchunk_y_pos;
+                            _ = self.get_absolute_blocks_positions(block_states_tag, block_resource_location, &chunk_pos, &mut blocks_positions_list);
                         }
                     }
                 }
@@ -217,7 +222,7 @@ impl McWorldDescriptor {
     } 
 
 
-    fn get_block_positions_in_subchunk(&self, block_states_tag: &nbt_tag::NbtTag, block_resource_location: &str, chunk_pos: &blocks::Coordinates, blocks_positions_list: &mut Vec<blocks::Coordinates>) -> bool {
+    fn get_absolute_blocks_positions(&self, block_states_tag: &nbt_tag::NbtTag, block_resource_location: &str, chunk_pos: &blocks::Coordinates, blocks_positions_list: &mut Vec<blocks::Coordinates>) -> bool {
         /* #10: Find palette TAG list in block states following the format https://minecraft.fandom.com/wiki/Chunk_format
         * block_states (TAG Compound)
         * -- palette (TAG List)
@@ -271,7 +276,7 @@ impl McWorldDescriptor {
                                         if palette_id == palette_current_index {
                                             blocks_positions_list.push(blocks::Coordinates::new(
                                                     [(chunk_pos.x * 16) + subchunk_x_pos, 
-                                                            (chunk_pos.y * 16) + subchunk_y_pos, 
+                                                            ((chunk_pos.y * 16) + subchunk_y_pos), 
                                                             (chunk_pos.z * 16) + subchunk_z_pos].to_vec()));
                                         }
                                         
