@@ -9,7 +9,7 @@ use blocks::MinecraftBlock;
 use nbt_tag::NbtTag;
 use nbt_tag::NbtTagCompound;
 use serde::{ser::SerializeMap, Serialize, Deserialize};
-use std::collections::HashMap;
+use std::collections::HashSet;
 use std::io;
 use std::path::PathBuf;
 use pyo3::prelude::*;
@@ -233,79 +233,57 @@ impl McWorldDescriptor {
 
         match palette_list_option {
             Some(palette_list) => {
-                let mut palette_current_index = 0;
-                for blocks in palette_list.values.iter() {
-                    /* #20: scan every block in the palette and check if the name is the one we are looking for
-                    * -- palette (TAG List)
-                    * ---- block (TAG Compound)
-                    * ------ Name (TAG String)
-                    */
-                    block_found = self.find_block_name_in_palette(blocks, block_resource_location);
-                    if block_found{
-                        match blocks_data_array_option {
-                            /* #30: if the searched block was found scan the data array associated to the palette.
-                            * A data array is a 64bit unsing integer array with a specific format (see Chunk_format)
-                            * A data array needs to contain all the blocks in the subchunk (section), which is 16x16x16
-                            * The blocks are saved as id referincing the palette and compressed in 64bit unsigned integer
-                            * Example:  palette list {minecraft:bedrock, minecreat:stone, minecraft:dirt}
-                            *           we need 2 bits to represent the 3 possible blocks in the section (0, 1, 2)
-                            *           the chunk file format specifies that min 4 bits must be used, so we get 4 bits.
-                            *           data array dec:     1180177 
-                            *           data array bin:     0000 0000 0001 0010 0000 0010 0001 0001
-                            *           data array palette: bedrock bedrock stone dirt bedrock dirt stone stone
-                            * For more details refer to https://minecraft.fandom.com/wiki/Chunk_format
-                            */
-                            Some(blocks_data_array) => { 
-                                let data_index_bit_size = self.get_palette_id_size_in_bit(palette_list);
+                let searched_block_palette_ids = self.create_unique_palette_id_set(&palette_list, block_resource_location);
 
-                                let mut subchunk_x_pos = 0;
-                                let mut subchunk_y_pos = 0;
-                                let mut subchunk_z_pos = 0;  
+                if !searched_block_palette_ids.is_empty() {
+                    match blocks_data_array_option {
+                        /* #30: if the searched block was found scan the data array associated to the palette.
+                        * A data array is a 64bit unsing integer array with a specific format (see Chunk_format)
+                        * A data array needs to contain all the blocks in the subchunk (section), which is 16x16x16
+                        * The blocks are saved as id referincing the palette and compressed in 64bit unsigned integer
+                        * Example:  palette list {minecraft:bedrock, minecreat:stone, minecraft:dirt}
+                        *           we need 2 bits to represent the 3 possible blocks in the section (0, 1, 2)
+                        *           the chunk file format specifies that min 4 bits must be used, so we get 4 bits.
+                        *           data array dec:     1180177 
+                        *           data array bin:     0000 0000 0001 0010 0000 0010 0001 0001
+                        *           data array palette: bedrock bedrock stone dirt bedrock dirt stone stone
+                        * For more details refer to https://minecraft.fandom.com/wiki/Chunk_format
+                        */
+                        Some(blocks_data_array) => { 
+                            let data_index_bit_size = self.get_palette_id_size_in_bit(palette_list);
 
-                                for blocks_data in blocks_data_array {
-                                    let palette_ids = self.get_palette_ids_from_data_array_element(blocks_data.clone(), data_index_bit_size);
-                                
-                                    /* #40: get the block position in the subchunk 
-                                    * block position is a tridimensional coordinate x,y,z. The blocks are stored with YZX order
-                                    * X increases each block
-                                    * Z increases each 16 blocks
-                                    * Y increases each 16x16 = 256 blocks
-                                    */                      
-                                    for palette_id in palette_ids {
-                                        //we are interested only in the searched block
-                                        if palette_id == palette_current_index {
-                                            blocks_positions_list.push(blocks::Coordinates::new(
-                                                    [(chunk_pos.x * 16) + subchunk_x_pos, 
-                                                            ((chunk_pos.y * 16) + subchunk_y_pos), 
-                                                            (chunk_pos.z * 16) + subchunk_z_pos].to_vec()));
-                                        }
-                                        
-                                        if subchunk_x_pos == 15 {
-                                            if subchunk_z_pos == 15 {
-                                                subchunk_y_pos += 1;
-                                                subchunk_z_pos = 0;
-                                                subchunk_x_pos = 0;
-                                            }
-                                            else {
-                                                subchunk_z_pos += 1;
-                                                subchunk_x_pos = 0;
-                                            }    
-                                        }
-                                        else {
-                                            subchunk_x_pos += 1;
-                                        } 
+                            let mut subchunk_x_pos = 0;
+                            let mut subchunk_y_pos = 0;
+                            let mut subchunk_z_pos = 0;  
+
+                            for blocks_data in blocks_data_array {
+                                let palette_ids = self.get_palette_ids_from_data_array_element(blocks_data.clone(), data_index_bit_size);
+                            
+                                /* #40: get the block position in the subchunk 
+                                * block position is a tridimensional coordinate x,y,z. The blocks are stored with YZX order
+                                * X increases each block
+                                * Z increases each 16 blocks
+                                * Y increases each 16x16 = 256 blocks
+                                */                      
+                                for palette_id in palette_ids {
+                                    //we are interested only in the searched block
+                                    if searched_block_palette_ids.contains(&palette_id) {
+                                        blocks_positions_list.push(blocks::Coordinates::new(
+                                                [(chunk_pos.x * 16) + subchunk_x_pos, 
+                                                        ((chunk_pos.y * 16) + subchunk_y_pos), 
+                                                        (chunk_pos.z * 16) + subchunk_z_pos].to_vec()));
                                     }
+                                    
+                                    self.advance_block_position(&mut subchunk_x_pos, &mut subchunk_y_pos, &mut subchunk_z_pos);
                                 }
-                            },
-                            None => {
-                                //TODO
                             }
+                        },
+                        None => {
+                            //TODO
                         }
-
                     }
-
-                    palette_current_index += 1;
                 }
+                         
             },
             None => {
                 
@@ -313,6 +291,46 @@ impl McWorldDescriptor {
         }
 
         block_found
+    }
+
+    fn advance_block_position(&self, x_pos: &mut i32, y_pos: &mut i32, z_pos: &mut i32) {
+        /*  In the chunk format blocks are stored sequentially in a way that:
+            every new block is x+1
+            after 16 blocks z+1
+            after 16x16 (256) blocks y+1
+        */
+        if *x_pos == 15 {
+            if *z_pos == 15 {
+                *y_pos += 1;
+                *z_pos = 0;
+                *x_pos = 0;
+            }
+            else {
+                *z_pos += 1;
+                *x_pos = 0;
+            }    
+        }
+        else {
+            *x_pos += 1;
+        } 
+    }
+
+    fn create_unique_palette_id_set(&self, palette_list: &nbt_tag::NbtTagList, block_resource_location: &str) -> HashSet<u32>{
+        /*Some blocks may have different palette ids with same names (for example a repeater oriented in different ways)*/
+        let mut searched_block_palette_ids = HashSet::<u32>::new();
+        let mut palette_current_index = 0;
+        for blocks in palette_list.values.iter() {
+            /* #20: scan every block in the palette and check if the name is the one we are looking for
+            * -- palette (TAG List)
+            * ---- block (TAG Compound)
+            * ------ Name (TAG String)
+            */
+            if self.find_block_name_in_palette(blocks, block_resource_location) {
+                searched_block_palette_ids.insert(palette_current_index);
+            }
+            palette_current_index += 1;
+        }
+        searched_block_palette_ids
     }
 
     fn get_palette_id_size_in_bit(&self, palette_list: &nbt_tag::NbtTagList) -> u32 {
