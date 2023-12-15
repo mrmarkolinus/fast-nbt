@@ -4,12 +4,7 @@ pub mod region;
 pub mod generic_bin;
 pub mod blocks;
 
-use blocks::Coordinates;
-use blocks::MinecraftBlock;
-use nbt_tag::NbtTag;
-use nbt_tag::NbtTagCompound;
-use serde::{ser::SerializeMap, Serialize, Deserialize};
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::io;
 use std::path::PathBuf;
 use pyo3::prelude::*;
@@ -186,7 +181,7 @@ impl McWorldDescriptor {
 
     }
 
-    pub fn search_block(&self, block_resource_location: &str) ->  Vec::<blocks::Coordinates> {
+    pub fn search_blocks<'a>(&self, block_resource_location: Vec::<String>) -> HashMap::<String, Vec::<blocks::Coordinates>> {
         
         // Refer to https://minecraft.fandom.com/wiki/Chunk_format to see how a block is saved in a chunk
         //sections (TAG List)
@@ -196,7 +191,7 @@ impl McWorldDescriptor {
         // ------ Name (TAG String)
 
         //let mut at_least_one_block_found = false;
-        let mut blocks_positions_list = Vec::<blocks::Coordinates>::new();
+        let mut blocks_positions_list = HashMap::<String, Vec::<blocks::Coordinates>>::new();
 
         for tag_compound in self.tag_compounds_list.iter() {
             let mut chunk_pos = self.get_chunk_coordinates(tag_compound);
@@ -210,7 +205,7 @@ impl McWorldDescriptor {
                             // The y position got from get_chunk_coordinates is always -4, since the chunk always starts at -4 * 16 = -64
                             // what we need is the actual subchunk position
                             chunk_pos.y = subchunk_y_pos;
-                            _ = self.get_absolute_blocks_positions(block_states_tag, block_resource_location, &chunk_pos, &mut blocks_positions_list);
+                            _ = self.get_absolute_blocks_positions(block_states_tag, &block_resource_location, &chunk_pos, &mut blocks_positions_list);
                         }
                     }
                 }
@@ -222,7 +217,11 @@ impl McWorldDescriptor {
     } 
 
 
-    fn get_absolute_blocks_positions(&self, block_states_tag: &nbt_tag::NbtTag, block_resource_location: &str, chunk_pos: &blocks::Coordinates, blocks_positions_list: &mut Vec<blocks::Coordinates>) -> bool {
+    fn get_absolute_blocks_positions<'a>(   &self, 
+                                            block_states_tag: &nbt_tag::NbtTag, 
+                                            block_resource_location: & 'a Vec::<String>, 
+                                            chunk_pos: &blocks::Coordinates, 
+                                            blocks_positions_list: & 'a mut HashMap::<String, Vec::<blocks::Coordinates>>) -> bool {
         /* #10: Find palette TAG list in block states following the format https://minecraft.fandom.com/wiki/Chunk_format
         * block_states (TAG Compound)
         * -- palette (TAG List)
@@ -233,9 +232,9 @@ impl McWorldDescriptor {
 
         match palette_list_option {
             Some(palette_list) => {
-                let searched_block_palette_ids = self.create_unique_palette_id_set(&palette_list, block_resource_location);
+                let (unique_set_created, searched_blocks_palette_ids) = self.create_unique_palette_id_set(&palette_list, block_resource_location);
 
-                if !searched_block_palette_ids.is_empty() {
+                if unique_set_created {
                     match blocks_data_array_option {
                         /* #30: if the searched block was found scan the data array associated to the palette.
                         * A data array is a 64bit unsing integer array with a specific format (see Chunk_format)
@@ -266,15 +265,23 @@ impl McWorldDescriptor {
                                 * Y increases each 16x16 = 256 blocks
                                 */                      
                                 for palette_id in palette_ids {
-                                    //we are interested only in the searched block
-                                    if searched_block_palette_ids.contains(&palette_id) {
-                                        blocks_positions_list.push(blocks::Coordinates::new(
-                                                [(chunk_pos.x * 16) + subchunk_x_pos, 
-                                                        ((chunk_pos.y * 16) + subchunk_y_pos), 
-                                                        (chunk_pos.z * 16) + subchunk_z_pos].to_vec()));
-                                    }
-                                    
-                                    self.advance_block_position(&mut subchunk_x_pos, &mut subchunk_y_pos, &mut subchunk_z_pos);
+                                    //we are interested only in the searched blocks
+                                    for (block_name, block_palette_ids) in searched_blocks_palette_ids.iter() {
+                                        if block_palette_ids.contains(&palette_id) {
+
+                                            if !blocks_positions_list.contains_key(block_name) {
+                                                blocks_positions_list.insert(block_name.clone(), vec![]);
+                                            }
+                                            
+                                            if let Some(current_block_positions_list) = blocks_positions_list.get_mut(block_name) {
+                                                current_block_positions_list.push(blocks::Coordinates::new(
+                                                    [(chunk_pos.x * 16) + subchunk_x_pos, 
+                                                            ((chunk_pos.y * 16) + subchunk_y_pos), 
+                                                            (chunk_pos.z * 16) + subchunk_z_pos].to_vec()));
+                                            }
+                                        }
+                                        self.advance_block_position(&mut subchunk_x_pos, &mut subchunk_y_pos, &mut subchunk_z_pos);
+                                    }                 
                                 }
                             }
                         },
@@ -315,22 +322,36 @@ impl McWorldDescriptor {
         } 
     }
 
-    fn create_unique_palette_id_set(&self, palette_list: &nbt_tag::NbtTagList, block_resource_location: &str) -> HashSet<u32>{
+    fn create_unique_palette_id_set<'a>(&self, palette_list: &nbt_tag::NbtTagList, block_resource_location: & 'a Vec::<String>) -> (bool, HashMap<String, HashSet<u32>>){
         /*Some blocks may have different palette ids with same names (for example a repeater oriented in different ways)*/
-        let mut searched_block_palette_ids = HashSet::<u32>::new();
+        
+        /* Init the data structure to contain multiple blocks finding */
+        let mut searched_blocks_palette_ids = HashMap::<String, HashSet<u32>>::new();
+
+        let mut unique_set_created = false;
         let mut palette_current_index = 0;
-        for blocks in palette_list.values.iter() {
-            /* #20: scan every block in the palette and check if the name is the one we are looking for
-            * -- palette (TAG List)
-            * ---- block (TAG Compound)
-            * ------ Name (TAG String)
-            */
-            if self.find_block_name_in_palette(blocks, block_resource_location) {
-                searched_block_palette_ids.insert(palette_current_index);
+        
+        for (block_index, block_name) in block_resource_location.iter().enumerate() {
+            let mut block_unique_set = HashSet::new();
+            for blocks in palette_list.values.iter() {
+                /* #20: scan every block in the palette and check if the name is the one we are looking for
+                * -- palette (TAG List)
+                * ---- block (TAG Compound)
+                * ------ Name (TAG String)
+                */
+                if self.find_block_name_in_palette(blocks, block_name) {
+                    block_unique_set.insert(palette_current_index);
+                    
+                    if !unique_set_created {
+                        unique_set_created = true;
+                    }
+                }
+                palette_current_index += 1;
             }
-            palette_current_index += 1;
+            searched_blocks_palette_ids.insert(block_name.clone(), block_unique_set);
         }
-        searched_block_palette_ids
+
+        (unique_set_created, searched_blocks_palette_ids)
     }
 
     fn get_palette_id_size_in_bit(&self, palette_list: &nbt_tag::NbtTagList) -> u32 {
