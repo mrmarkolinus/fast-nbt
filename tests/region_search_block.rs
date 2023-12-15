@@ -13,6 +13,10 @@ fn region_search_blocks() {
     // Confirm that values are correct
     let mc_world = mc_world.unwrap();
     
-    let block_positions = mc_world.search_blocks(vec!["minecraft:repeater".to_string()]);
+    let block_positions = mc_world.search_blocks(vec![
+                                                                        "minecraft:repeater".to_string(), 
+                                                                        "minecraft:lever".to_string(), 
+                                                                        "minecraft:iron_block".to_string(),
+                                                                        "minecraft:piston".to_string(),]);
     //assert_eq!(compound_found, true);
 }

@@ -329,9 +329,10 @@ impl McWorldDescriptor {
         let mut searched_blocks_palette_ids = HashMap::<String, HashSet<u32>>::new();
 
         let mut unique_set_created = false;
-        let mut palette_current_index = 0;
+        
         
         for (block_index, block_name) in block_resource_location.iter().enumerate() {
+            let mut palette_current_index = 0;
             let mut block_unique_set = HashSet::new();
             for blocks in palette_list.values.iter() {
                 /* #20: scan every block in the palette and check if the name is the one we are looking for
