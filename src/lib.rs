@@ -168,8 +168,6 @@ impl McWorldDescriptor {
         // -- palette (TAG List)
         // ---- block (TAG Compound)
         // ------ Name (TAG String)
-
-        //let mut at_least_one_block_found = false;
         let mut blocks_positions_list = HashMap::<String, Vec::<blocks::Coordinates>>::new();
 
         for tag_compound in self.tag_compounds_list.iter() {
@@ -660,8 +658,8 @@ impl PyNbtTag {
             match nbt_tag.ty() {
                 nbt_tag::NbtTagType::End => {
 
-                    let log_msg = format!("tag_end: Name: {}, Value: {}", "[END]", "[END]");
-                    crate::py_log(log_msg);
+                    //let log_msg = format!("tag_end: Name: {}, Value: {}", "[END]", "[END]");
+                    //crate::py_log(log_msg);
 
                     dict.as_ref(py).set_item("END_TAG", 0).unwrap();
                     dict
@@ -669,8 +667,8 @@ impl PyNbtTag {
                 nbt_tag::NbtTagType::Byte => {
                     let tag_byte = nbt_tag.byte().unwrap();
 
-                    let log_msg = format!("tag_byte: Name: {}, Value: {}", tag_byte.name, tag_byte.value);
-                    crate::py_log(log_msg);
+                    //let log_msg = format!("tag_byte: Name: {}, Value: {}", tag_byte.name, tag_byte.value);
+                    //crate::py_log(log_msg);
 
                     dict.as_ref(py).set_item(tag_byte.name, tag_byte.value).unwrap();
                     dict
@@ -679,8 +677,8 @@ impl PyNbtTag {
                 nbt_tag::NbtTagType::Short => {
                     let tag_short = nbt_tag.short().unwrap();
 
-                    let log_msg = format!("tag_short: Name: {}, Value: {}", tag_short.name, tag_short.value);
-                    crate::py_log(log_msg);
+                    //let log_msg = format!("tag_short: Name: {}, Value: {}", tag_short.name, tag_short.value);
+                    //crate::py_log(log_msg);
 
 
                     dict.as_ref(py).set_item(tag_short.name, tag_short.value).unwrap();
@@ -690,8 +688,8 @@ impl PyNbtTag {
                 nbt_tag::NbtTagType::Int => {
                     let tag_int = nbt_tag.int().unwrap_or_default(); //error without default.
 
-                    let log_msg = format!("tag_int: Name: {}, Value: {}", tag_int.name, tag_int.value);
-                    crate::py_log(log_msg);
+                    //let log_msg = format!("tag_int: Name: {}, Value: {}", tag_int.name, tag_int.value);
+                    //crate::py_log(log_msg);
 
                     dict.as_ref(py).set_item(tag_int.name, tag_int.value).unwrap();
                     dict
@@ -700,8 +698,8 @@ impl PyNbtTag {
                 nbt_tag::NbtTagType::Long => {
                     let tag_long = nbt_tag.long().unwrap();
 
-                    let log_msg = format!("tag_long: Name: {}, Value: {}", tag_long.name, tag_long.value);
-                    crate::py_log(log_msg);
+                    //let log_msg = format!("tag_long: Name: {}, Value: {}", tag_long.name, tag_long.value);
+                    //crate::py_log(log_msg);
 
                     dict.as_ref(py).set_item(tag_long.name, tag_long.value).unwrap();
                     dict
@@ -710,8 +708,8 @@ impl PyNbtTag {
                 nbt_tag::NbtTagType::Float => {
                     let tag_float = nbt_tag.float().unwrap();
 
-                    let log_msg = format!("tag_float: Name: {}, Value: {}", tag_float.name, tag_float.value);
-                    crate::py_log(log_msg);
+                    //let log_msg = format!("tag_float: Name: {}, Value: {}", tag_float.name, tag_float.value);
+                    //crate::py_log(log_msg);
 
 
                     dict.as_ref(py).set_item(tag_float.name, tag_float.value).unwrap();
@@ -721,8 +719,8 @@ impl PyNbtTag {
                 nbt_tag::NbtTagType::Double => {
                     let tag_double = nbt_tag.double().unwrap();
 
-                    let log_msg = format!("tag_double: Name: {}, Value: {}", tag_double.name, tag_double.value);
-                    crate::py_log(log_msg);
+                    //let log_msg = format!("tag_double: Name: {}, Value: {}", tag_double.name, tag_double.value);
+                    //crate::py_log(log_msg);
 
                     dict.as_ref(py).set_item(tag_double.name, tag_double.value).unwrap();
                     dict
@@ -731,8 +729,8 @@ impl PyNbtTag {
                 nbt_tag::NbtTagType::ByteArray => {
                     let tag_byte_array = nbt_tag.byte_array().unwrap();
 
-                    let log_msg = format!("tag_byte_array: Name: {}, Value: {}", tag_byte_array.name, "[Values]");
-                    crate::py_log(log_msg);
+                    //let log_msg = format!("tag_byte_array: Name: {}, Value: {}", tag_byte_array.name, "[Values]");
+                    //crate::py_log(log_msg);
 
                     dict.as_ref(py).set_item(tag_byte_array.name, tag_byte_array.values).unwrap();
                     dict
@@ -741,8 +739,8 @@ impl PyNbtTag {
                 nbt_tag::NbtTagType::String => {
                     let tag_string = nbt_tag.string().unwrap();
 
-                    let log_msg = format!("tag_string: Name: {}, Value: {}", tag_string.name, tag_string.value);
-                    crate::py_log(log_msg);
+                    //let log_msg = format!("tag_string: Name: {}, Value: {}", tag_string.name, tag_string.value);
+                    //crate::py_log(log_msg);
 
                     dict.as_ref(py).set_item(tag_string.name, tag_string.value).unwrap();
                     dict
@@ -753,16 +751,16 @@ impl PyNbtTag {
                     let empty_object_array: &[PyObject] = &[];
                     let py_list: &PyList = PyList::new(py, empty_object_array);
 
-                    let log_msg = format!("tag_list: Name: {}, Value: {}", tag_list.name, "[NbtTagList]");
-                    crate::py_log(log_msg);
+                    //let log_msg = format!("tag_list: Name: {}, Value: {}", tag_list.name, "[NbtTagList]");
+                    //crate::py_log(log_msg);
 
                     //not efficient, i am processind the data two times, but for now make it work
                     for list_element in &tag_list.values {
                         let py_list_element = PyNbtTag::new(list_element);
                         let _ = py_list.append(py_list_element.python_dict);
 
-                        let log_msg = format!("tag_list: parsed");
-                        crate::py_log(log_msg);
+                        //let log_msg = format!("tag_list: parsed");
+                        //crate::py_log(log_msg);
                     }
 
                     dict.as_ref(py).set_item(tag_list.name, py_list).unwrap();
@@ -774,16 +772,15 @@ impl PyNbtTag {
                     //let empty_object_array: &[PyObject] = &[];
                     let py_dict: &PyDict = PyDict::new(py);
 
-                    let log_msg = format!("tag_compound: Name: {}, Value: {}", tag_compound.name, "[HashMap]");
-                    crate::py_log(log_msg);
+                    //let log_msg = format!("tag_compound: Name: {}, Value: {}", tag_compound.name, "[HashMap]");
+                    //crate::py_log(log_msg);
 
                     for (key, value) in tag_compound.values.iter() {
                         let py_tag = PyNbtTag::new(value);
                         let _ = py_dict.set_item(key, py_tag.python_dict);
 
-                        let log_msg = format!("tag_compound_hashmap: Name: {}, Value: {}", key, "[NbtTag]");
-                        //let log_msg = format!("tag_compound_hashmap_tag: Name: {}, Value: {}", key, py_tag.python_dict.get_item(key).unwrap());
-                        crate::py_log(log_msg);
+                        //let log_msg = format!("tag_compound_hashmap: Name: {}, Value: {}", key, "[NbtTag]");
+                        //crate::py_log(log_msg);
                     }
 
                     dict.as_ref(py).set_item(tag_compound.name, py_dict).unwrap();
@@ -793,8 +790,8 @@ impl PyNbtTag {
                 nbt_tag::NbtTagType::IntArray => {
                     let tag_int_array = nbt_tag.int_array().unwrap();
 
-                    let log_msg = format!("tag_int_array: Name: {}, Value: {}", tag_int_array.name, "[Values]");
-                    crate::py_log(log_msg);
+                    //let log_msg = format!("tag_int_array: Name: {}, Value: {}", tag_int_array.name, "[Values]");
+                    //crate::py_log(log_msg);
 
                     dict.as_ref(py).set_item(tag_int_array.name, tag_int_array.values).unwrap();
                     dict
@@ -803,8 +800,8 @@ impl PyNbtTag {
                 nbt_tag::NbtTagType::LongArray => {
                     let tag_long_array = nbt_tag.long_array().unwrap();
 
-                    let log_msg = format!("tag_long_array: Name: {}, Value: {}", tag_long_array.name, "[Values]");
-                    crate::py_log(log_msg);
+                    //let log_msg = format!("tag_long_array: Name: {}, Value: {}", tag_long_array.name, "[Values]");
+                    //crate::py_log(log_msg);
 
                     dict.as_ref(py).set_item(tag_long_array.name, tag_long_array.values).unwrap();
                     dict

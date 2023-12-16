@@ -39,42 +39,6 @@
         ]
       }
     },
-    "intTest": {
-      "Int": {
-        "name": "intTest",
-        "value": 2147483647
-      }
-    },
-    "shortTest": {
-      "Short": {
-        "name": "shortTest",
-        "value": 32767
-      }
-    },
-    "byteTest": {
-      "Byte": {
-        "name": "byteTest",
-        "value": 127
-      }
-    },
-    "stringTest": {
-      "String": {
-        "name": "stringTest",
-        "value": "HELLO WORLD THIS IS A TEST STRING ÃÃÃ!"
-      }
-    },
-    "floatTest": {
-      "Float": {
-        "name": "floatTest",
-        "value": 0.49823147
-      }
-    },
-    "longTest": {
-      "Long": {
-        "name": "longTest",
-        "value": 9223372036854775807
-      }
-    },
     "byteArrayTest (the first 1000 values of (n*n*255+n*7)%100, starting with n=0 (0, 62, 34, 16, 8, ...))": {
       "ByteArray": {
         "name": "byteArrayTest (the first 1000 values of (n*n*255+n*7)%100, starting with n=0 (0, 62, 34, 16, 8, ...))",
@@ -1082,10 +1046,22 @@
         ]
       }
     },
+    "shortTest": {
+      "Short": {
+        "name": "shortTest",
+        "value": 32767
+      }
+    },
     "doubleTest": {
       "Double": {
         "name": "doubleTest",
         "value": 0.4931287132182315
+      }
+    },
+    "floatTest": {
+      "Float": {
+        "name": "floatTest",
+        "value": 0.49823147
       }
     },
     "listTest (compound)": {
@@ -1097,16 +1073,16 @@
             "Compound": {
               "name": "",
               "values": {
-                "created-on": {
-                  "Long": {
-                    "name": "created-on",
-                    "value": 1264099775885
-                  }
-                },
                 "name": {
                   "String": {
                     "name": "name",
                     "value": "Compound tag #0"
+                  }
+                },
+                "created-on": {
+                  "Long": {
+                    "name": "created-on",
+                    "value": 1264099775885
                   }
                 }
               }
@@ -1177,6 +1153,30 @@
             }
           }
         }
+      }
+    },
+    "byteTest": {
+      "Byte": {
+        "name": "byteTest",
+        "value": 127
+      }
+    },
+    "stringTest": {
+      "String": {
+        "name": "stringTest",
+        "value": "HELLO WORLD THIS IS A TEST STRING ÃÃÃ!"
+      }
+    },
+    "longTest": {
+      "Long": {
+        "name": "longTest",
+        "value": 9223372036854775807
+      }
+    },
+    "intTest": {
+      "Int": {
+        "name": "intTest",
+        "value": 2147483647
       }
     }
   }
