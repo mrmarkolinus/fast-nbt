@@ -5,7 +5,6 @@ use byteorder::{BigEndian, ReadBytesExt};
 use std::io::Cursor;
 use std::path::PathBuf;
 use std::fs;
-use flate2::read::GzDecoder;
 use std::io::BufReader;
 use std::io::Read;
 

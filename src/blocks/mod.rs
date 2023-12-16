@@ -1,9 +1,13 @@
+use pyo3::prelude::*;
+
+#[pyclass]
 pub struct MinecraftBlock{
     pub name: String,
     pub coord: Coordinates,
     pub chunk: MinecraftChunk,
 }
 
+#[pyclass]
 pub struct Coordinates
 {
     pub x: i32,
@@ -11,6 +15,7 @@ pub struct Coordinates
     pub z: i32,
 }
 
+#[pyclass]
 pub struct MinecraftChunk
 {
     pub coord: Coordinates,

@@ -87,32 +87,11 @@ impl PyMcWorldDescriptor {
             (false, py_tag_list)
         }
 
-       /*  match compound_tag_option {
-            None => {
-                let empty_dict = Python::with_gil(|py| { PyDict::new(py).into() });
-                (compound_found, empty_dict)
-            },
-            Some(compound_tag) => {
-                let tag_root = nbt_tag::NbtTag::Compound(compound_tag.clone());
-                (compound_found, PyNbtTag::new(&tag_root).python_dict)
-            }
-        } */
     }
 
-        
-        
-
-    /* pub fn from_json(&self, path: String) -> PyResult<Self> {
-        let path = PathBuf::from(path);
-        let file = fs::File::open(&path)
-            .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(format!("{}", e)))?;
-        let reader = BufReader::new(file); // Wrap the file in a BufReader
-
-        // Deserialize the JSON data directly from the stream.
-        let tag_compound = serde_json::from_reader(reader)
-            .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(format!("{}", e)));
-    } */
-
+    pub fn search_blocks(&self, block_resource_location: Vec::<String>) -> HashMap::<String, Vec::<blocks::Coordinates>> {
+        self.mc_world_descriptor.search_blocks(block_resource_location)
+    }
 
 }
 
@@ -331,7 +310,7 @@ impl McWorldDescriptor {
         let mut unique_set_created = false;
         
         
-        for (block_index, block_name) in block_resource_location.iter().enumerate() {
+        for block_name in block_resource_location.iter() {
             let mut palette_current_index = 0;
             let mut block_unique_set = HashSet::new();
             for blocks in palette_list.values.iter() {
