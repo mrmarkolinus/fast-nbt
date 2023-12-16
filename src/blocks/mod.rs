@@ -10,8 +10,11 @@ pub struct MinecraftBlock{
 #[pyclass]
 pub struct Coordinates
 {
+    #[pyo3(get, set)]
     pub x: i32,
+    #[pyo3(get, set)]
     pub y: i32,
+    #[pyo3(get, set)]
     pub z: i32,
 }
 
@@ -31,7 +34,9 @@ impl MinecraftBlock {
     }
 }
 
+#[pymethods]
 impl Coordinates {
+    #[new]
     pub fn new (coord: Vec<i32>) -> Self {
         Self {
             x : coord[0],

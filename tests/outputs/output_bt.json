@@ -1,6 +1,36 @@
 {
   "name": "Level",
   "values": {
+    "floatTest": {
+      "Float": {
+        "name": "floatTest",
+        "value": 0.49823147
+      }
+    },
+    "doubleTest": {
+      "Double": {
+        "name": "doubleTest",
+        "value": 0.4931287132182315
+      }
+    },
+    "stringTest": {
+      "String": {
+        "name": "stringTest",
+        "value": "HELLO WORLD THIS IS A TEST STRING ÃÃÃ!"
+      }
+    },
+    "byteTest": {
+      "Byte": {
+        "name": "byteTest",
+        "value": 127
+      }
+    },
+    "intTest": {
+      "Int": {
+        "name": "intTest",
+        "value": 2147483647
+      }
+    },
     "listTest (long)": {
       "List": {
         "name": "listTest (long)",
@@ -34,6 +64,52 @@
             "Long": {
               "name": "",
               "value": 15
+            }
+          }
+        ]
+      }
+    },
+    "listTest (compound)": {
+      "List": {
+        "name": "listTest (compound)",
+        "ty": "Compound",
+        "values": [
+          {
+            "Compound": {
+              "name": "",
+              "values": {
+                "name": {
+                  "String": {
+                    "name": "name",
+                    "value": "Compound tag #0"
+                  }
+                },
+                "created-on": {
+                  "Long": {
+                    "name": "created-on",
+                    "value": 1264099775885
+                  }
+                }
+              }
+            }
+          },
+          {
+            "Compound": {
+              "name": "",
+              "values": {
+                "name": {
+                  "String": {
+                    "name": "name",
+                    "value": "Compound tag #1"
+                  }
+                },
+                "created-on": {
+                  "Long": {
+                    "name": "created-on",
+                    "value": 1264099775885
+                  }
+                }
+              }
             }
           }
         ]
@@ -1046,137 +1122,61 @@
         ]
       }
     },
-    "shortTest": {
-      "Short": {
-        "name": "shortTest",
-        "value": 32767
-      }
-    },
-    "doubleTest": {
-      "Double": {
-        "name": "doubleTest",
-        "value": 0.4931287132182315
-      }
-    },
-    "floatTest": {
-      "Float": {
-        "name": "floatTest",
-        "value": 0.49823147
-      }
-    },
-    "listTest (compound)": {
-      "List": {
-        "name": "listTest (compound)",
-        "ty": "Compound",
-        "values": [
-          {
-            "Compound": {
-              "name": "",
-              "values": {
-                "name": {
-                  "String": {
-                    "name": "name",
-                    "value": "Compound tag #0"
-                  }
-                },
-                "created-on": {
-                  "Long": {
-                    "name": "created-on",
-                    "value": 1264099775885
-                  }
-                }
-              }
-            }
-          },
-          {
-            "Compound": {
-              "name": "",
-              "values": {
-                "name": {
-                  "String": {
-                    "name": "name",
-                    "value": "Compound tag #1"
-                  }
-                },
-                "created-on": {
-                  "Long": {
-                    "name": "created-on",
-                    "value": 1264099775885
-                  }
-                }
-              }
-            }
-          }
-        ]
-      }
-    },
-    "nested compound test": {
-      "Compound": {
-        "name": "nested compound test",
-        "values": {
-          "ham": {
-            "Compound": {
-              "name": "ham",
-              "values": {
-                "name": {
-                  "String": {
-                    "name": "name",
-                    "value": "Hampus"
-                  }
-                },
-                "value": {
-                  "Float": {
-                    "name": "value",
-                    "value": 0.75
-                  }
-                }
-              }
-            }
-          },
-          "egg": {
-            "Compound": {
-              "name": "egg",
-              "values": {
-                "value": {
-                  "Float": {
-                    "name": "value",
-                    "value": 0.5
-                  }
-                },
-                "name": {
-                  "String": {
-                    "name": "name",
-                    "value": "Eggbert"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "byteTest": {
-      "Byte": {
-        "name": "byteTest",
-        "value": 127
-      }
-    },
-    "stringTest": {
-      "String": {
-        "name": "stringTest",
-        "value": "HELLO WORLD THIS IS A TEST STRING ÃÃÃ!"
-      }
-    },
     "longTest": {
       "Long": {
         "name": "longTest",
         "value": 9223372036854775807
       }
     },
-    "intTest": {
-      "Int": {
-        "name": "intTest",
-        "value": 2147483647
+    "shortTest": {
+      "Short": {
+        "name": "shortTest",
+        "value": 32767
+      }
+    },
+    "nested compound test": {
+      "Compound": {
+        "name": "nested compound test",
+        "values": {
+          "egg": {
+            "Compound": {
+              "name": "egg",
+              "values": {
+                "name": {
+                  "String": {
+                    "name": "name",
+                    "value": "Eggbert"
+                  }
+                },
+                "value": {
+                  "Float": {
+                    "name": "value",
+                    "value": 0.5
+                  }
+                }
+              }
+            }
+          },
+          "ham": {
+            "Compound": {
+              "name": "ham",
+              "values": {
+                "value": {
+                  "Float": {
+                    "name": "value",
+                    "value": 0.75
+                  }
+                },
+                "name": {
+                  "String": {
+                    "name": "name",
+                    "value": "Hampus"
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     }
   }

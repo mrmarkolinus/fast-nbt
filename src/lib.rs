@@ -7,6 +7,7 @@ pub mod blocks;
 use std::collections::{HashMap, HashSet};
 use std::io;
 use std::path::PathBuf;
+use blocks::Coordinates;
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
 use pyo3::types::{PyDict, PyList};
@@ -18,6 +19,7 @@ fn rnbt(py: Python, m: &PyModule) -> PyResult<()> {
     pyo3_log::init();
     m.add_class::<PyMcWorldDescriptor>()?;
     m.add_class::<PyNbtTag>()?;
+    m.add_class::<Coordinates>()?;
     m.add_function(wrap_pyfunction!(load_binary, m)?)?;
     m.add_function(wrap_pyfunction!(py_log, m)?)?;
 
@@ -47,7 +49,6 @@ pub struct PyMcWorldDescriptor {
 #[pymethods]
 impl PyMcWorldDescriptor {
     #[new]
-
     pub fn new(rust_mc_world_descriptor: McWorldDescriptor) -> std::io::Result<Self> {
 
         let mut py_tag_list = Vec::<Py<PyDict>>::new();
