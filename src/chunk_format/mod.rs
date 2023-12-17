@@ -143,16 +143,19 @@ pub fn get_absolute_blocks_positions<'a>   (block_states_tag: &nbt_tag::NbtTag,
                                             blocks_positions_list.insert(block_name.clone(), vec![]);
                                         }
                                         
-                                        if let Some(current_block_positions_list) = blocks_positions_list.get_mut(block_name) {
-                                            
-                                            let mc_block = blocks::MinecraftBlock::new(block_name.to_owned(),
+                                        if let Some(current_block_positions_list) = blocks_positions_list.get_mut(block_name) {   
+                                            if let Some(block_tag) = palette_list.values.get(palette_id as usize) {
+                                                let block_properties = get_block_properties(block_tag);
+                                                
+                                                let mc_block = blocks::MinecraftBlock::new(block_name.to_owned(),
                                                                                                 [(chunk_pos.x * 16) + subchunk_x_pos, 
                                                                                                         ((chunk_pos.y * 16) + subchunk_y_pos), 
                                                                                                         (chunk_pos.z * 16) + subchunk_z_pos].to_vec(), 
                                                                                             [chunk_pos.x, chunk_pos.y, chunk_pos.z].to_vec(),
-                                                                                            HashMap::<String,String>::new());
+                                                                                                        block_properties);
                                             
-                                            current_block_positions_list.push(mc_block);
+                                                current_block_positions_list.push(mc_block);
+                                            }   
                                         }
                                     }
                                     advance_block_position(&mut subchunk_x_pos, &mut subchunk_y_pos, &mut subchunk_z_pos);
@@ -265,6 +268,45 @@ pub fn create_unique_palette_id_set<'a>(palette_list: &nbt_tag::NbtTagList, bloc
     (unique_set_created, searched_blocks_palette_ids)
 }
 
+/// Extracts properties of a Minecraft block from its NBT tag.
+///
+/// Parses a given NBT tag representing a Minecraft block and extracts its properties, specifically those that are of string type.
+/// This function is useful for retrieving various attributes of a block, such as orientation, activation, 
+/// or any other characteristic defined in the block's NBT data.
+///
+/// # Arguments
+///
+/// * `block_tag` - An NbtTag representing a Minecraft block. This tag should contain the block's properties.
+///
+/// # Returns
+///
+/// Returns a `HashMap<String, String>` where each key-value pair corresponds to a property name and its value.
+/// Only properties of type `String` are included in the returned HashMap.
+///
+/// # Details
+///
+/// The function iterates over all key-value pairs in the provided `block_tag`. 
+/// It checks if the value associated with each key is of type `String` according to the NBT tag's type system.
+/// If a string type is found, the key and its string value are inserted into the HashMap.
+/// This method efficiently filters and collects the string properties of a block, making them readily accessible for further processing or display.
+pub fn get_block_properties(block_tag: &nbt_tag::NbtTag) -> HashMap<String, String> {
+    
+    let mut block_properties = HashMap::<String, String>::new();
+    
+    if let Some(block_compound) = block_tag.compound_as_ref() {
+        if let Some(block_properties_tag) = block_compound.values.get("Properties") {
+            if let Some(block_properties_compound) = block_properties_tag.compound_as_ref() {
+                for (key, value) in block_properties_compound.values.iter() {
+                    if value.ty() == nbt_tag::NbtTagType::String {
+                        block_properties.insert(key.to_string(), value.string().unwrap().value);
+                    }
+                }
+            }
+        }
+    }
+
+    block_properties
+}
 
 /// Calculates the size of palette IDs in bits for Minecraft block data.
 ///

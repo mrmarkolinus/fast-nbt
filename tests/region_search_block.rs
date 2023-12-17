@@ -6,9 +6,9 @@ use std::path::PathBuf;
 #[test]
 fn region_search_blocks() {
     
-    let mut path = PathBuf::from("C:/MultiMC/MultiMC/instances/Fabulously.Optimized.MC.1.20.1.auto-update/.minecraft/saves/fast-nbt test/");
-    //let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    //path.push("tests/resources/test_world/r.-1.0.mca");
+    //let mut path = PathBuf::from("C:/MultiMC/MultiMC/instances/Fabulously.Optimized.MC.1.20.1.auto-update/.minecraft/saves/fast-nbt test/");
+    let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    path.push("tests/resources/test_world/r.-1.0.mca");
 
     let mc_world = McWorldDescriptor::new(path);
 

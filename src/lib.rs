@@ -33,6 +33,7 @@ fn rnbt(py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<PyNbtTag>()?;
     m.add_class::<blocks::MinecraftBlock>()?;
     m.add_class::<blocks::Coordinates>()?;
+    
     m.add_function(wrap_pyfunction!(load_binary, m)?)?;
     m.add_function(wrap_pyfunction!(py_log, m)?)?;
 
