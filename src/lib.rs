@@ -107,37 +107,6 @@ pub struct McWorldDescriptor {
 impl McWorldDescriptor {
     pub fn new(input_path: PathBuf) -> std::io::Result<Self> {
         let cloned_input_path = input_path.clone();
-        //let tag_compounds_list = Self::read_from_binary_file(input_path)?;
-        //let tag_compounds_list = Vec::<nbt_tag::NbtTagCompound>::new();
-        //let tag_compounds_list = Self::read_from_binary_file(&input_path)
-        //    .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(format!("{}", e)))?;
-
-        
-            
-            // let mut nbt_tag_compounds_list = Vec::<nbt_tag::NbtTagCompound>::new();
-
-            // if ext == "mcr" || ext == "mca" {
-            //     let region_file = region::RegionFile::new(input_path)?;
-            //     nbt_tag_compounds_list = match region_file.to_compounds_list(){
-            //         Ok(c) => c,
-            //         Err(e) => return Err(e),
-            //     }
-            // }
-            // else if ext == "nbt" || ext == "litematic" {
-            //     let bin_content = generic_bin::GenericBinFile::new(input_path, generic_bin::FileType::Nbt)?;
-            //     nbt_tag_compounds_list = match bin_content.to_compounds_list(){
-            //         Ok(c) => c,
-            //         Err(e) => return Err(e),
-            //     }
-            // }
-            // else if ext == "json" {
-            //     let json_content = nbt_tag::NbtTagCompound::from_json(input_path)?;//Self::from_json(input_path)?;
-
-            //     //TEMP: should actually check which kind of file is retrieved from the json (region, nbt, etc.)
-            //     //let mut compunds_list = Vec::new();
-            //     nbt_tag_compounds_list.push(json_content);
-            // }
-
         
         if let Ok(nbt_tag_compounds_list) = Self::read_file_format(input_path) {
             Ok(McWorldDescriptor {
@@ -170,29 +139,15 @@ impl McWorldDescriptor {
                 let nbt_tag_compounds_list = bin_content.to_compounds_list()?;
                 Ok(nbt_tag_compounds_list)   
             }
+            else if ext == "json" {
+                let json_content = nbt_tag::NbtTagCompound::from_json(input_path)?;//Self::from_json(input_path)?;
+                let mut nbt_tag_compounds_list = Vec::<nbt_tag::NbtTagCompound>::new();
+                nbt_tag_compounds_list.push(json_content);
+                Ok(nbt_tag_compounds_list)
+            }
             else {
                 Err(io::Error::new(io::ErrorKind::InvalidInput, "Invalid file extension"))
             }
-
-            
-
-            // else if ext == "nbt" || ext == "litematic" {
-            //     let bin_content = generic_bin::GenericBinFile::new(input_path, generic_bin::FileType::Nbt)?;
-            //     nbt_tag_compounds_list = match bin_content.to_compounds_list(){
-            //         Ok(c) => c,
-            //         Err(e) => Err(io::Error::new(io::ErrorKind::InvalidInput, "Unknown compression format"))
-            //     }
-            // }
-            // else {
-            //     Err(io::Error::new(io::ErrorKind::InvalidInput, "Invalid file extension"))
-            // }
-            // else if ext == "json" {
-            //     let json_content = nbt_tag::NbtTagCompound::from_json(input_path)?;//Self::from_json(input_path)?;
-
-            //     //TEMP: should actually check which kind of file is retrieved from the json (region, nbt, etc.)
-            //     //let mut compunds_list = Vec::new();
-            //     nbt_tag_compounds_list.push(json_content);
-            // }
         }
         else {
             Err(io::Error::new(io::ErrorKind::InvalidInput, "File without extension"))
