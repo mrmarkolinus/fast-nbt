@@ -18,5 +18,5 @@ fn region_search_blocks() {
                                                                         "minecraft:lever".to_string(), 
                                                                         "minecraft:iron_block".to_string(),
                                                                         "minecraft:piston".to_string(),]);
-    //assert_eq!(compound_found, true);
+    print!("End");
 }

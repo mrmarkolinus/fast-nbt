@@ -112,31 +112,34 @@ impl McWorldDescriptor {
         //let tag_compounds_list = Self::read_from_binary_file(&input_path)
         //    .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(format!("{}", e)))?;
 
-        if let Some(ext) = input_path.extension().and_then(|e| e.to_str()) {
+        
             
-            let mut nbt_tag_compounds_list = Vec::<nbt_tag::NbtTagCompound>::new();
+            // let mut nbt_tag_compounds_list = Vec::<nbt_tag::NbtTagCompound>::new();
 
-            if ext == "mcr" || ext == "mca" {
-                let region_file = region::RegionFile::new(input_path)?;
-                nbt_tag_compounds_list = match region_file.to_compounds_list(){
-                    Ok(c) => c,
-                    Err(e) => return Err(e),
-                }
-            }
-            else if ext == "nbt" || ext == "litematic" {
-                let bin_content = generic_bin::GenericBinFile::new(input_path, generic_bin::FileType::Nbt)?;
-                nbt_tag_compounds_list = match bin_content.to_compounds_list(){
-                    Ok(c) => c,
-                    Err(e) => return Err(e),
-                }
-            }
-            else if ext == "json" {
-                let json_content = nbt_tag::NbtTagCompound::from_json(input_path)?;//Self::from_json(input_path)?;
+            // if ext == "mcr" || ext == "mca" {
+            //     let region_file = region::RegionFile::new(input_path)?;
+            //     nbt_tag_compounds_list = match region_file.to_compounds_list(){
+            //         Ok(c) => c,
+            //         Err(e) => return Err(e),
+            //     }
+            // }
+            // else if ext == "nbt" || ext == "litematic" {
+            //     let bin_content = generic_bin::GenericBinFile::new(input_path, generic_bin::FileType::Nbt)?;
+            //     nbt_tag_compounds_list = match bin_content.to_compounds_list(){
+            //         Ok(c) => c,
+            //         Err(e) => return Err(e),
+            //     }
+            // }
+            // else if ext == "json" {
+            //     let json_content = nbt_tag::NbtTagCompound::from_json(input_path)?;//Self::from_json(input_path)?;
 
-                //TEMP: should actually check which kind of file is retrieved from the json (region, nbt, etc.)
-                //let mut compunds_list = Vec::new();
-                nbt_tag_compounds_list.push(json_content);
-            }
+            //     //TEMP: should actually check which kind of file is retrieved from the json (region, nbt, etc.)
+            //     //let mut compunds_list = Vec::new();
+            //     nbt_tag_compounds_list.push(json_content);
+            // }
+
+        
+        if let Ok(nbt_tag_compounds_list) = Self::read_file_format(input_path) {
             Ok(McWorldDescriptor {
                 input_path: cloned_input_path,
                 version: "0.0.0".to_string(),
@@ -145,10 +148,56 @@ impl McWorldDescriptor {
         }
         else{
             //TODO: read a file not only based on the extension, but checking the internal format
-            Err(std::io::Error::new(std::io::ErrorKind::Other, "Unsupported file type"))
+            Err(std::io::Error::new(std::io::ErrorKind::Other, "McWorldDescriptor not created because of input file error"))
         } 
 
         
+    }
+
+    fn read_file_format(input_path: PathBuf) -> std::io::Result<Vec<nbt_tag::NbtTagCompound>> {
+        
+        if let Some(ext) = input_path.extension().and_then(|e| e.to_str()) {
+
+            //let mut nbt_tag_compounds_list = Vec::<nbt_tag::NbtTagCompound>::new();
+
+            if ext == "mcr" || ext == "mca" {
+                let region_file = region::RegionFile::new(input_path)?;
+                let nbt_tag_compounds_list = region_file.to_compounds_list()?;
+                Ok(nbt_tag_compounds_list)
+            }
+            else if ext == "nbt" || ext == "litematic" {
+                let bin_content = generic_bin::GenericBinFile::new(input_path, generic_bin::FileType::Nbt)?;
+                let nbt_tag_compounds_list = bin_content.to_compounds_list()?;
+                Ok(nbt_tag_compounds_list)   
+            }
+            else {
+                Err(io::Error::new(io::ErrorKind::InvalidInput, "Invalid file extension"))
+            }
+
+            
+
+            // else if ext == "nbt" || ext == "litematic" {
+            //     let bin_content = generic_bin::GenericBinFile::new(input_path, generic_bin::FileType::Nbt)?;
+            //     nbt_tag_compounds_list = match bin_content.to_compounds_list(){
+            //         Ok(c) => c,
+            //         Err(e) => Err(io::Error::new(io::ErrorKind::InvalidInput, "Unknown compression format"))
+            //     }
+            // }
+            // else {
+            //     Err(io::Error::new(io::ErrorKind::InvalidInput, "Invalid file extension"))
+            // }
+            // else if ext == "json" {
+            //     let json_content = nbt_tag::NbtTagCompound::from_json(input_path)?;//Self::from_json(input_path)?;
+
+            //     //TEMP: should actually check which kind of file is retrieved from the json (region, nbt, etc.)
+            //     //let mut compunds_list = Vec::new();
+            //     nbt_tag_compounds_list.push(json_content);
+            // }
+        }
+        else {
+            Err(io::Error::new(io::ErrorKind::InvalidInput, "File without extension"))
+        }
+
     }
 
     pub fn get_mc_version(&self) -> String {
@@ -324,6 +373,7 @@ impl McWorldDescriptor {
                     if !unique_set_created {
                         unique_set_created = true;
                     }
+                    
                 }
                 palette_current_index += 1;
             }
