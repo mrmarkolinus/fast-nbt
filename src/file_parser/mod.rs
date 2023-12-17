@@ -1,14 +1,15 @@
 // ## Author
-// - mrmarkolinus
+// - caelunshun, mrmarkolinus
 //
 // ## Date
 // - 2023-12-17
 //
 // ## File Version
-// - 1.0.0
+// - 1.0.1
 //
 // ## Changelog
-// - 1.0.0: Initial version
+// - 1.0.0: Initial version [caelunshun:2019-07-09]
+// - 1.0.1: Splitted the file_parser logic from the nbt_tag logic [mrmarkolinus:2023-12-17]
 
 use crate::nbt_tag::*;
 use crate::generic_bin;
