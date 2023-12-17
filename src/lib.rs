@@ -17,10 +17,9 @@ pub mod generic_bin;
 pub mod blocks;
 pub mod chunk_format;
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::io;
 use std::path::PathBuf;
-use blocks::Coordinates;
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
 use pyo3::types::{PyDict, PyList};
@@ -32,7 +31,8 @@ fn rnbt(py: Python, m: &PyModule) -> PyResult<()> {
     pyo3_log::init();
     m.add_class::<PyMcWorldDescriptor>()?;
     m.add_class::<PyNbtTag>()?;
-    m.add_class::<Coordinates>()?;
+    m.add_class::<blocks::MinecraftBlock>()?;
+    m.add_class::<blocks::Coordinates>()?;
     m.add_function(wrap_pyfunction!(load_binary, m)?)?;
     m.add_function(wrap_pyfunction!(py_log, m)?)?;
 
@@ -103,7 +103,7 @@ impl PyMcWorldDescriptor {
 
     }
 
-    pub fn search_blocks(&self, block_resource_location: Vec::<String>) -> HashMap::<String, Vec::<blocks::Coordinates>> {
+    pub fn search_blocks(&self, block_resource_location: Vec::<String>) -> HashMap::<String, Vec::<blocks::MinecraftBlock>> {
         self.mc_world_descriptor.search_blocks(block_resource_location)
     }
 
@@ -219,7 +219,7 @@ impl McWorldDescriptor {
         Ok(self.tag_compounds_list.get(0).unwrap().to_json(path)?)
     }
 
-    pub fn search_blocks<'a>(&self, block_resource_location: Vec::<String>) -> HashMap::<String, Vec::<blocks::Coordinates>> {
+    pub fn search_blocks<'a>(&self, block_resource_location: Vec::<String>) -> HashMap::<String, Vec::<blocks::MinecraftBlock>> {
         chunk_format::inspect_chunks(block_resource_location, &self.tag_compounds_list)
     } 
 

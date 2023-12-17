@@ -10,7 +10,6 @@
 // ## Changelog
 // - 1.0.0: Initial version
 
-
 use crate::nbt_tag;
 use crate::blocks;
 
@@ -35,14 +34,14 @@ use std::collections::{HashMap, HashSet};
 /// string, and the value is a vector of Coordinates structs representing the positions of 
 /// the blocks in the Minecraft world.
 /// 
-pub fn inspect_chunks<'a>(block_resource_location: Vec::<String>, tag_compounds_list: &'a Vec<nbt_tag::NbtTagCompound>) -> HashMap::<String, Vec::<blocks::Coordinates>> {
+pub fn inspect_chunks<'a>(block_resource_location: Vec::<String>, tag_compounds_list: &'a Vec<nbt_tag::NbtTagCompound>) -> HashMap::<String, Vec::<blocks::MinecraftBlock>> {
     // Refer to https://minecraft.fandom.com/wiki/Chunk_format to see how a block is saved in a chunk
     //sections (TAG List)
     // block_states (TAG Compound)
     // -- palette (TAG List)
     // ---- block (TAG Compound)
     // ------ Name (TAG String)
-    let mut blocks_positions_list = HashMap::<String, Vec::<blocks::Coordinates>>::new();
+    let mut blocks_positions_list = HashMap::<String, Vec::<blocks::MinecraftBlock>>::new();
 
     for tag_compound in tag_compounds_list.iter() {
         let mut chunk_pos = get_chunk_coordinates(tag_compound);
@@ -92,7 +91,7 @@ pub fn inspect_chunks<'a>(block_resource_location: Vec::<String>, tag_compounds_
 pub fn get_absolute_blocks_positions<'a>   (block_states_tag: &nbt_tag::NbtTag, 
                                             block_resource_location: & 'a Vec::<String>, 
                                             chunk_pos: &blocks::Coordinates, 
-                                            blocks_positions_list: & 'a mut HashMap::<String, Vec::<blocks::Coordinates>>) -> bool {
+                                            blocks_positions_list: & 'a mut HashMap::<String, Vec::<blocks::MinecraftBlock>>) -> bool {
     /* #10: Find palette TAG list in block states following the format https://minecraft.fandom.com/wiki/Chunk_format
     * block_states (TAG Compound)
     * -- palette (TAG List)
@@ -145,10 +144,15 @@ pub fn get_absolute_blocks_positions<'a>   (block_states_tag: &nbt_tag::NbtTag,
                                         }
                                         
                                         if let Some(current_block_positions_list) = blocks_positions_list.get_mut(block_name) {
-                                            current_block_positions_list.push(blocks::Coordinates::new(
-                                                [(chunk_pos.x * 16) + subchunk_x_pos, 
-                                                        ((chunk_pos.y * 16) + subchunk_y_pos), 
-                                                        (chunk_pos.z * 16) + subchunk_z_pos].to_vec()));
+                                            
+                                            let mc_block = blocks::MinecraftBlock::new(block_name.to_owned(),
+                                                                                                [(chunk_pos.x * 16) + subchunk_x_pos, 
+                                                                                                        ((chunk_pos.y * 16) + subchunk_y_pos), 
+                                                                                                        (chunk_pos.z * 16) + subchunk_z_pos].to_vec(), 
+                                                                                            [chunk_pos.x, chunk_pos.y, chunk_pos.z].to_vec(),
+                                                                                            HashMap::<String,String>::new());
+                                            
+                                            current_block_positions_list.push(mc_block);
                                         }
                                     }
                                     advance_block_position(&mut subchunk_x_pos, &mut subchunk_y_pos, &mut subchunk_z_pos);
