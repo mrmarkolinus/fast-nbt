@@ -1,3 +1,15 @@
+// ## Author
+// - mrmarkolinus
+//
+// ## Date
+// - 2023-12-17
+//
+// ## File Version
+// - 1.0.0
+//
+// ## Changelog
+// - 1.0.0: Initial version
+
 use byteorder::{BigEndian, WriteBytesExt};
 use std::collections::HashMap;
 use std::io::Write;

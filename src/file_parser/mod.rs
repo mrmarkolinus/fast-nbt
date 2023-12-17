@@ -1,3 +1,15 @@
+// ## Author
+// - mrmarkolinus
+//
+// ## Date
+// - 2023-12-17
+//
+// ## File Version
+// - 1.0.0
+//
+// ## Changelog
+// - 1.0.0: Initial version
+
 use crate::nbt_tag::*;
 use crate::generic_bin;
 
