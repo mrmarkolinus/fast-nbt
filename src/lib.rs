@@ -108,7 +108,7 @@ impl McWorldDescriptor {
     pub fn new(input_path: PathBuf) -> std::io::Result<Self> {
         let cloned_input_path = input_path.clone();
         
-        if let Ok(nbt_tag_compounds_list) = Self::read_file_format(input_path) {
+        if let Ok(nbt_tag_compounds_list) = Self::read_input_path(input_path) {
             Ok(McWorldDescriptor {
                 input_path: cloned_input_path,
                 version: "0.0.0".to_string(),
@@ -121,6 +121,49 @@ impl McWorldDescriptor {
         } 
 
         
+    }
+
+    fn read_input_path(input_path: PathBuf) -> std::io::Result<Vec<nbt_tag::NbtTagCompound>> {
+        
+        /* #10: The use can give in input either a folder path to Minecraft world or directly a file path.
+        *  Here the path is checked, if a folder is found, the subfolder "region" is searched.
+        *  If "region" is found, this is likely to be a valid Minecraft world, then the region files are read.
+        */
+
+        let mut nbt_tag_compounds_list = Vec::<nbt_tag::NbtTagCompound>::new();
+
+        if input_path.is_dir()
+        {
+            /* #20: Folder path as input */
+            if !input_path.exists() {
+                return Err(std::io::Error::new(std::io::ErrorKind::Other, "World Directory does not exist"));
+            }
+    
+            let region_path = input_path.join("region");
+            if !region_path.exists() || !region_path.is_dir() {
+                return Err(std::io::Error::new(std::io::ErrorKind::Other, "SubDir './region' does not exist"));
+            }
+            
+            /* #30: Input path is a valid folder and contains a subfolder "region"*/
+            match std::fs::read_dir(region_path) {
+                Ok(entries) => {
+                    for entry in entries {
+                        if let Ok(entry) = entry {
+                            let file_path = PathBuf::from(entry.path().to_string_lossy().into_owned());
+                            nbt_tag_compounds_list.append(&mut Self::read_file_format(file_path)?);
+                        }
+                    }
+                },
+                Err(_) => return Err(std::io::Error::new(std::io::ErrorKind::Other, "Error in reading the region files")),
+            }
+        }
+        else {
+            nbt_tag_compounds_list.append(&mut Self::read_file_format(input_path)?);
+        }
+        
+
+        Ok(nbt_tag_compounds_list)
+
     }
 
     fn read_file_format(input_path: PathBuf) -> std::io::Result<Vec<nbt_tag::NbtTagCompound>> {
