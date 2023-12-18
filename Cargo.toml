@@ -1,5 +1,5 @@
 [package]
-name = "rnbt"
+name = "fastnbt"
 version = "0.2.0"
 authors = ["mrmarkolinus <marco.battagliotti@gmail.com>, based on work by caelunshun <caelunshun@gmail.com>"]
 edition = "2021"

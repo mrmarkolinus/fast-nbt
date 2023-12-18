@@ -1,6 +1,6 @@
 //! Tests the library using the `bigtest.nbt` file provided
 //! by Mojang.
-use rnbt::McWorldDescriptor;
+use fastnbt::McWorldDescriptor;
 use std::path::PathBuf;
 
 #[test]

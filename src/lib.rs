@@ -27,7 +27,7 @@ use log::info;
 use pyo3_log;
 
 #[pymodule]
-fn rnbt(py: Python, m: &PyModule) -> PyResult<()> {
+fn fastnbt(py: Python, m: &PyModule) -> PyResult<()> {
     pyo3_log::init();
     m.add_class::<PyMcWorldDescriptor>()?;
     m.add_class::<PyNbtTag>()?;

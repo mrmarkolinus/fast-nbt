@@ -1,11 +1,11 @@
-import rnbt as rnbt # This should match the name of your .so or .pyd file.
+import fastnbt as fnbt # This should match the name of your .so or .pyd file.
 #import logging
 #TEST TEST
 #logging.basicConfig(level=logging.INFO)
 #mc_binary = rnbt.load_binary('tests/resources/test_world/r.-1.0.mca')
 
 #READ THE ENTIRE TEST WORLD AND SEARCH FOR REDSTONE COMPONENTS
-mc_binary = rnbt.load_binary('C:/MultiMC/MultiMC/instances/Fabulously.Optimized.MC.1.20.1.auto-update/.minecraft/saves/fast-nbt test/')
+mc_binary = fnbt.load_binary('C:/MultiMC/MultiMC/instances/Fabulously.Optimized.MC.1.20.1.auto-update/.minecraft/saves/fast-nbt test/')
 redstone = mc_binary.search_blocks(['minecraft:repeater', 'minecraft:lever', 'minecraft:iron_block', 'minecraft:piston'])
 
 
