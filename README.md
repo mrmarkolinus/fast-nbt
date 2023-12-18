@@ -58,9 +58,6 @@
   <ol>
     <li>
       <a href="#about-the-project">About The Project</a>
-      <ul>
-        <li><a href="#built-with">Built With</a></li>
-      </ul>
     </li>
     <li>
       <a href="#getting-started">Getting Started</a>
@@ -83,37 +80,22 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-[![Product Name Screen Shot][product-screenshot]](https://example.com)
+There are a lot of great libraries out there to read and manipulate Minecraft nbt files. Unfortunately none of them really fits my goals.
+I wanted something fast, easy to use and that would allow me to do something cool with Minecraft worlds and binary files :)
 
-There are many great README templates available on GitHub; however, I didn't find one that really suited my needs so I created this enhanced one. I want to create a README template so amazing that it'll be the last one you ever need -- I think this is it.
+The goals of the project are:
+* Performance: fast-nbt shall be able to read lots of files in batch mode. This is why Rust is used.
+* Easy to use: fast-nbt shall be straightforward to use. This is why Pyo3 is used to use the library from Python.
+* Versatility: fast-nbt shall be able to read and manipulate as many file types as possible (region, anvil, litematica, nbt, json)
 
-Here's why:
-* Your time should be focused on creating something amazing. A project that solves a problem and helps others
-* You shouldn't be doing the same tasks over and over like creating a README from scratch
-* You should implement DRY principles to the rest of your life :smile:
-
-Of course, no one template will serve all projects since your needs may be different. So I'll be adding more in the near future. You may also suggest changes by forking this repo and creating a pull request or opening an issue. Thanks to all the people have contributed to expanding this template!
-
-Use the `BLANK_README.md` to get started.
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-
-### Built With
-
-This section should list any major frameworks/libraries used to bootstrap your project. Leave any add-ons/plugins for the acknowledgements section. Here are a few examples.
-
-* [![Next][Next.js]][Next-url]
-* [![React][React.js]][React-url]
-* [![Vue][Vue.js]][Vue-url]
-* [![Angular][Angular.io]][Angular-url]
-* [![Svelte][Svelte.dev]][Svelte-url]
-* [![Laravel][Laravel.com]][Laravel-url]
-* [![Bootstrap][Bootstrap.com]][Bootstrap-url]
-* [![JQuery][JQuery.com]][JQuery-url]
+My personal goals are:
+* Have fun: use technologies and methods that i enjoy using
+* Learn: before starting i had no idea of Rust and some confused idea of Python. It is probably still the same :)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
+
 
 
 
