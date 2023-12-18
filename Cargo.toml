@@ -1,6 +1,6 @@
 [package]
 name = "fastnbt"
-version = "0.2.0"
+version = "0.0.1"
 authors = ["mrmarkolinus <marco.battagliotti@gmail.com>, based on work by caelunshun <caelunshun@gmail.com>"]
 edition = "2021"
 
