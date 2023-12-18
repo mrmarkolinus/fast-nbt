@@ -158,8 +158,8 @@ pub fn get_absolute_blocks_positions<'a>   (block_states_tag: &nbt_tag::NbtTag,
                                             }   
                                         }
                                     }
-                                    advance_block_position(&mut subchunk_x_pos, &mut subchunk_y_pos, &mut subchunk_z_pos);
-                                }                 
+                                }  
+                                advance_block_position(&mut subchunk_x_pos, &mut subchunk_y_pos, &mut subchunk_z_pos);               
                             }
                         }
                     },
