@@ -67,6 +67,7 @@ impl Coordinates {
 #[derive(Clone)]
 pub struct MinecraftChunk
 {
+    #[pyo3(get, set)]
     pub coord: Coordinates,
 }
 

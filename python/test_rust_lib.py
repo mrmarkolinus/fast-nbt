@@ -1,6 +1,5 @@
 import fastnbt as fnbt # This should match the name of your .so or .pyd file.
 #import logging
-#TEST TEST
 #logging.basicConfig(level=logging.INFO)
 #mc_binary = rnbt.load_binary('tests/resources/test_world/r.-1.0.mca')
 
@@ -14,6 +13,11 @@ print('Repeater Coords')
 print(redstone['minecraft:repeater'][0].coord.x)
 print(redstone['minecraft:repeater'][0].coord.y)
 print(redstone['minecraft:repeater'][0].coord.z)
+
+print('Repeater Chunk Coords')
+print(redstone['minecraft:repeater'][0].chunk.coord.x)
+print(redstone['minecraft:repeater'][0].chunk.coord.y)
+print(redstone['minecraft:repeater'][0].chunk.coord.z)
 
 print('Repeater Properties')
 print(redstone['minecraft:repeater'][0].properties)
