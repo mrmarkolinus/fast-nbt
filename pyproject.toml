@@ -1,0 +1,7 @@
+[tool.maturin]
+python-source = "fast-nbt"
+module-name = "fast-nbt._fastnbt"
+
+[build-system]
+requires = ["maturin"]
+build-backend = "maturin"

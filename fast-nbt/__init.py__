@@ -1,0 +1,1 @@
+from .fastnbt import load_binary
