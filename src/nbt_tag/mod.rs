@@ -18,11 +18,35 @@ use std::io::Write;
 use serde::{Serialize, Deserialize};
 use std::fs;
 use std::io::{self, BufWriter, BufReader};
+use thiserror::Error;
 use derive_new::new;
 
 #[cfg(test)]
 mod tests;
+/// Custom error type for NBT Tag operations.
+#[derive(Error, Debug)]
+pub enum NbtTagError {
+    #[error("I/O error: {0}")]
+    Io(#[from] io::Error),
 
+    #[error("Serialization/Deserialization error: {0}")]
+    Serde(#[from] serde_json::Error),
+
+    #[error("Invalid NBT tag type: {0}")]
+    InvalidTagType(u8),
+
+    #[error("Unknown compression format: {0}")]
+    UnknownCompression(u8),
+
+    #[error("Invalid chunk header length.")]
+    InvalidChunkHeaderLength,
+
+    #[error("Chunk index out of bounds.")]
+    ChunkIndexOutOfBounds,
+
+    #[error("Max NBT List length exceeded.")]
+    MaxNbtListLengthExceeded,
+}
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct NbtTagCompound {
@@ -142,22 +166,23 @@ impl NbtTagType {
         }
     }
 
-    pub fn from_id(id: u8) -> Option<Self> {
+    /// Constructs an `NbtTagType` from its byte identifier.
+    pub fn from_id(id: u8) -> Result<Self, NbtTagError> {
         match id {
-            0 => Some(NbtTagType::End),
-            1 => Some(NbtTagType::Byte),
-            2 => Some(NbtTagType::Short),
-            3 => Some(NbtTagType::Int),
-            4 => Some(NbtTagType::Long),
-            5 => Some(NbtTagType::Float),
-            6 => Some(NbtTagType::Double),
-            7 => Some(NbtTagType::ByteArray),
-            8 => Some(NbtTagType::String),
-            9 => Some(NbtTagType::List),
-            10 => Some(NbtTagType::Compound),
-            11 => Some(NbtTagType::IntArray),
-            12 => Some(NbtTagType::LongArray),
-            _ => None,
+            0 => Ok(NbtTagType::End),
+            1 => Ok(NbtTagType::Byte),
+            2 => Ok(NbtTagType::Short),
+            3 => Ok(NbtTagType::Int),
+            4 => Ok(NbtTagType::Long),
+            5 => Ok(NbtTagType::Float),
+            6 => Ok(NbtTagType::Double),
+            7 => Ok(NbtTagType::ByteArray),
+            8 => Ok(NbtTagType::String),
+            9 => Ok(NbtTagType::List),
+            10 => Ok(NbtTagType::Compound),
+            11 => Ok(NbtTagType::IntArray),
+            12 => Ok(NbtTagType::LongArray),
+            _ => Err(NbtTagError::InvalidTagType(id)),
         }
     }
 }
@@ -205,7 +230,7 @@ impl NbtTag {
             NbtTag::List(_) => NbtTagType::List,
             NbtTag::Compound(_) => NbtTagType::Compound,
             NbtTag::IntArray(_) => NbtTagType::IntArray,
-            NbtTag::LongArray(_) => NbtTagType::End,
+            NbtTag::LongArray(_) => NbtTagType::LongArray,
         }
     } 
 
@@ -410,71 +435,72 @@ pub struct NbtTagLongArray {
     pub values: Vec<i64>,
 }
 
-
-pub fn write(buf: &mut Vec<u8>, compound: &NbtTagCompound) {
-    write_tag_type(buf, NbtTagType::Compound);
-    write_tag_name(buf, &compound.name);
-    write_compound(buf, compound);
+/// Writes an `NbtTagCompound` to a buffer in NBT format.
+pub fn write(buf: &mut Vec<u8>, compound: &NbtTagCompound) -> Result<(), NbtTagError> {
+    write_tag_type(buf, NbtTagType::Compound)?;
+    write_tag_name(buf, &compound.name)?;
+    write_compound(buf, compound)?;
+    Ok(())
 }
 
-fn write_compound(buf: &mut Vec<u8>, compound: &NbtTagCompound) {
-    for val in compound.values.values() {
-        write_value(buf, val, true);
+fn write_compound(buf: &mut Vec<u8>, compound: &NbtTagCompound) -> Result<(), NbtTagError> {
+    for value in compound.values.values() {
+        write_value(buf, value, true)?;
     }
 }
 
-fn write_value(buf: &mut Vec<u8>, value: &NbtTag, write_name: bool) {
+fn write_value(buf: &mut Vec<u8>, value: &NbtTag, write_name: bool) -> Result<(), NbtTagError> {
     let ty = value.ty();
-    write_tag_type(buf, ty);
+    write_tag_type(buf, ty)?;
 
     match value {
         NbtTag::End => (),
         NbtTag::Byte(val) => {
             if write_name {
-                write_tag_name(buf, &val.name);
+                write_tag_name(buf, &val.name)?;
             }
-            buf.write_i8(val.value).unwrap();
+            buf.write_i8(val.value)?;
         }
         NbtTag::Short(val) => {
             if write_name {
-                write_tag_name(buf, &val.name);
+                write_tag_name(buf, &val.name)?;
             }
-            buf.write_i16::<BigEndian>(val.value).unwrap();
+            buf.write_i16::<BigEndian>(val.value)?;
         }
         NbtTag::Int(val) => {
             if write_name {
-                write_tag_name(buf, &val.name);
+                write_tag_name(buf, &val.name)?;
             }
-            buf.write_i32::<BigEndian>(val.value).unwrap();
+            buf.write_i32::<BigEndian>(val.value)?;
         }
         NbtTag::Long(val) => {
             if write_name {
-                write_tag_name(buf, &val.name);
+                write_tag_name(buf, &val.name)?;
             }
-            buf.write_i64::<BigEndian>(val.value).unwrap();
+            buf.write_i64::<BigEndian>(val.value)?;
         }
         NbtTag::Float(val) => {
             if write_name {
-                write_tag_name(buf, &val.name);
+                write_tag_name(buf, &val.name)?;
             }
-            buf.write_f32::<BigEndian>(val.value).unwrap();
+            buf.write_f32::<BigEndian>(val.value)?;
         }
         NbtTag::Double(val) => {
             if write_name {
-                write_tag_name(buf, &val.name);
+                write_tag_name(buf, &val.name)?;
             }
-            buf.write_f64::<BigEndian>(val.value).unwrap();
+            buf.write_f64::<BigEndian>(val.value)?;
         }
         NbtTag::ByteArray(val) => {
             if write_name {
                 write_tag_name(buf, &val.name);
             }
 
-            buf.write_i16::<BigEndian>(val.values.len() as i16).unwrap();
+            buf.write_i16::<BigEndian>(val.values.len() as i16)?;
             buf.reserve(val.values.len());
 
             for x in &val.values {
-                buf.write_i8(*x).unwrap();
+                buf.write_i8(*x)?;
             }
         }
         NbtTag::String(val) => {
@@ -482,8 +508,8 @@ fn write_value(buf: &mut Vec<u8>, value: &NbtTag, write_name: bool) {
                 write_tag_name(buf, &val.name);
             }
 
-            buf.write_u16::<BigEndian>(val.value.len() as u16).unwrap();
-            buf.write(val.value.as_bytes()).unwrap();
+            buf.write_u16::<BigEndian>(val.value.len() as u16)?;
+            buf.write(val.value.as_bytes())?;
         }
         NbtTag::List(val) => {
             if write_name {
@@ -491,7 +517,7 @@ fn write_value(buf: &mut Vec<u8>, value: &NbtTag, write_name: bool) {
             }
 
             write_tag_type(buf, val.ty);
-            buf.write_i32::<BigEndian>(val.values.len() as i32).unwrap();
+            buf.write_i32::<BigEndian>(val.values.len() as i32)?;
 
             for val in &val.values {
                 // Finally, an actual application of recursion
@@ -510,12 +536,12 @@ fn write_value(buf: &mut Vec<u8>, value: &NbtTag, write_name: bool) {
                 write_tag_name(buf, &val.name);
             }
 
-            buf.write_i32::<BigEndian>(val.values.len() as i32).unwrap();
+            buf.write_i32::<BigEndian>(val.values.len() as i32)?;
 
             buf.reserve(val.values.len());
 
             for x in &val.values {
-                buf.write_i32::<BigEndian>(*x).unwrap();
+                buf.write_i32::<BigEndian>(*x)?;
             }
         }
         NbtTag::LongArray(val) => {
@@ -523,22 +549,26 @@ fn write_value(buf: &mut Vec<u8>, value: &NbtTag, write_name: bool) {
                 write_tag_name(buf, &val.name);
             }
 
-            buf.write_i32::<BigEndian>(val.values.len() as i32).unwrap();
+            buf.write_i32::<BigEndian>(val.values.len() as i32)?;
 
             buf.reserve(val.values.len());
 
             for x in &val.values {
-                buf.write_i64::<BigEndian>(*x).unwrap();
+                buf.write_i64::<BigEndian>(*x)?;
             }
         }
     }
+
+    Ok(())
 }
 
-fn write_tag_name(buf: &mut Vec<u8>, s: &str) {
-    buf.write_i16::<BigEndian>(s.len() as i16).unwrap();
-    buf.write(s.as_bytes()).unwrap();
+fn write_tag_name(buf: &mut Vec<u8>, s: &str) -> Result<(), NbtTagError> {
+    buf.write_i16::<BigEndian>(s.len() as i16)?;
+    buf.write_all(s.as_bytes())?;
+    Ok(())
 }
 
-fn write_tag_type(buf: &mut Vec<u8>, ty: NbtTagType) {
-    buf.write_u8(ty.id()).unwrap();
+fn write_tag_type(buf: &mut Vec<u8>, ty: NbtTagType) -> Result<(), NbtTagError> {
+    buf.write_u8(ty.id())?;
+    Ok(())
 }
