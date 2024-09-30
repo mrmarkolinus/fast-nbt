@@ -444,9 +444,9 @@ pub fn write(buf: &mut Vec<u8>, compound: &NbtTagCompound) -> Result<(), NbtTagE
 }
 
 fn write_compound(buf: &mut Vec<u8>, compound: &NbtTagCompound) -> Result<(), NbtTagError> {
-    for value in compound.values.values() {
+    Ok(for value in compound.values.values() {
         write_value(buf, value, true)?;
-    }
+    })
 }
 
 fn write_value(buf: &mut Vec<u8>, value: &NbtTag, write_name: bool) -> Result<(), NbtTagError> {
@@ -493,7 +493,7 @@ fn write_value(buf: &mut Vec<u8>, value: &NbtTag, write_name: bool) -> Result<()
         }
         NbtTag::ByteArray(val) => {
             if write_name {
-                write_tag_name(buf, &val.name);
+                write_tag_name(buf, &val.name)?;
             }
 
             buf.write_i16::<BigEndian>(val.values.len() as i16)?;
@@ -505,7 +505,7 @@ fn write_value(buf: &mut Vec<u8>, value: &NbtTag, write_name: bool) -> Result<()
         }
         NbtTag::String(val) => {
             if write_name {
-                write_tag_name(buf, &val.name);
+                write_tag_name(buf, &val.name)?;
             }
 
             buf.write_u16::<BigEndian>(val.value.len() as u16)?;
@@ -513,27 +513,27 @@ fn write_value(buf: &mut Vec<u8>, value: &NbtTag, write_name: bool) -> Result<()
         }
         NbtTag::List(val) => {
             if write_name {
-                write_tag_name(buf, &val.name);
+                write_tag_name(buf, &val.name)?;
             }
 
-            write_tag_type(buf, val.ty);
+            write_tag_type(buf, val.ty)?;
             buf.write_i32::<BigEndian>(val.values.len() as i32)?;
 
             for val in &val.values {
                 // Finally, an actual application of recursion
-                write_value(buf, val, false);
+                write_value(buf, val, false)?;
             }
         }
         NbtTag::Compound(val) => {
             if write_name {
-                write_tag_name(buf, &val.name);
+                write_tag_name(buf, &val.name)?;
             }
 
-            write_compound(buf, val);
+            write_compound(buf, val)?;
         }
         NbtTag::IntArray(val) => {
             if write_name {
-                write_tag_name(buf, &val.name);
+                write_tag_name(buf, &val.name)?;
             }
 
             buf.write_i32::<BigEndian>(val.values.len() as i32)?;
@@ -546,7 +546,7 @@ fn write_value(buf: &mut Vec<u8>, value: &NbtTag, write_name: bool) -> Result<()
         }
         NbtTag::LongArray(val) => {
             if write_name {
-                write_tag_name(buf, &val.name);
+                write_tag_name(buf, &val.name)?;
             }
 
             buf.write_i32::<BigEndian>(val.values.len() as i32)?;
