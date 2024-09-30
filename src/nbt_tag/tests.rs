@@ -21,19 +21,19 @@ fn test_nbt_tag_type_ids() {
 
 #[test]
 fn test_nbt_tag_type_from_id() {
-    assert_eq!(NbtTagType::from_id(0), Some(NbtTagType::End));
-    assert_eq!(NbtTagType::from_id(1), Some(NbtTagType::Byte));
-    assert_eq!(NbtTagType::from_id(2), Some(NbtTagType::Short));
-    assert_eq!(NbtTagType::from_id(3), Some(NbtTagType::Int));
-    assert_eq!(NbtTagType::from_id(4), Some(NbtTagType::Long));
-    assert_eq!(NbtTagType::from_id(5), Some(NbtTagType::Float));
-    assert_eq!(NbtTagType::from_id(6), Some(NbtTagType::Double));
-    assert_eq!(NbtTagType::from_id(7), Some(NbtTagType::ByteArray));
-    assert_eq!(NbtTagType::from_id(8), Some(NbtTagType::String));
-    assert_eq!(NbtTagType::from_id(9), Some(NbtTagType::List));
-    assert_eq!(NbtTagType::from_id(10), Some(NbtTagType::Compound));
-    assert_eq!(NbtTagType::from_id(11), Some(NbtTagType::IntArray));
-    assert_eq!(NbtTagType::from_id(12), Some(NbtTagType::LongArray));
-    assert_eq!(NbtTagType::from_id(255), None); // Test an invalid ID
+    assert_eq!(NbtTagType::from_id(0).unwrap(), NbtTagType::End);
+    assert_eq!(NbtTagType::from_id(1).unwrap(), NbtTagType::Byte);
+    assert_eq!(NbtTagType::from_id(2).unwrap(), NbtTagType::Short);
+    assert_eq!(NbtTagType::from_id(3).unwrap(), NbtTagType::Int);
+    assert_eq!(NbtTagType::from_id(4).unwrap(), NbtTagType::Long);
+    assert_eq!(NbtTagType::from_id(5).unwrap(), NbtTagType::Float);
+    assert_eq!(NbtTagType::from_id(6).unwrap(), NbtTagType::Double);
+    assert_eq!(NbtTagType::from_id(7).unwrap(), NbtTagType::ByteArray);
+    assert_eq!(NbtTagType::from_id(8).unwrap(), NbtTagType::String);
+    assert_eq!(NbtTagType::from_id(9).unwrap(), NbtTagType::List);
+    assert_eq!(NbtTagType::from_id(10).unwrap(), NbtTagType::Compound);
+    assert_eq!(NbtTagType::from_id(11).unwrap(), NbtTagType::IntArray);
+    assert_eq!(NbtTagType::from_id(12).unwrap(), NbtTagType::LongArray);
+    assert!(NbtTagType::from_id(255).is_err()); // Test an invalid ID returns an error
 }
 
